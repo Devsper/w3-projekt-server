@@ -18,7 +18,6 @@ class Employee{
         $this->conn = $db;
     }
 
-    // read products
     function get($param = null){
         
         // Fetches all employees if no parameter is passed else fetch specific employee

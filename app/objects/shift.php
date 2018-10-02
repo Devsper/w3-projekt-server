@@ -16,11 +16,15 @@ class Shift{
         $this->conn = $db;
     }
 
-    // read products
-    function get(){
+    function get($param = null){
         
-        // select all query
-        $query = "SELECT * FROM ".$this->tableName;
+        // Fetches all employees if no parameter is passed else fetch specific employee
+        if(empty($param)){
+            // select all query
+            $query = "SELECT * FROM {$this->tableName}";
+        }else{
+            $query = "SELECT * FROM {$this->tableName} WHERE {$this->tableName}.Id = $param";
+        }
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
