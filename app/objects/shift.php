@@ -10,6 +10,7 @@ class Shift{
     public $registerDate;
     public $startTime;
     public $endTime;
+    public $employee_Id;
 
     // Constructs a database connection
     public function __construct($db){

@@ -9,6 +9,7 @@ class SubTask{
     public $id;
     public $name;
     public $createdDate;
+    public $task_Id;
 
     // Constructs a database connection
     public function __construct($db){

@@ -17,7 +17,7 @@ switch($method){
         $db = $database->getConnection();
 
         $shift = new Shift($db);
-        $shiftProp = array_fill_keys(array("id", "registerDate", "startTime", "endTime"),"");
+        $shiftProp = array_fill_keys(array("id", "registerDate", "startTime", "endTime", "employee_Id"),"");
 
         get($shift, $shiftProp);
         break;

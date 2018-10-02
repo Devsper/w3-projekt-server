@@ -17,7 +17,7 @@ switch($method){
         $db = $database->getConnection();
 
         $subtask = new SubTask($db);
-        $subtaskProp = array_fill_keys(array("id", "name", "createdDate"),"");
+        $subtaskProp = array_fill_keys(array("id", "name", "createdDate", "task_Id"),"");
 
         get($subtask, $subtaskProp);
         break;

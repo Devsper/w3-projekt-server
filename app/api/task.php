@@ -17,7 +17,7 @@ switch($method){
         $db = $database->getConnection();
 
         $task = new Task($db);
-        $taskProp = array_fill_keys(array("id", "name", "createdDate"),"");
+        $taskProp = array_fill_keys(array("id", "name", "createdDate", "assignment_Id"),"");
 
         get($task, $taskProp);
         break;

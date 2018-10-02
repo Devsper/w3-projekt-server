@@ -9,6 +9,7 @@ class Task{
     public $id;
     public $name;
     public $createdDate;
+    public $assignment_Id;
 
     // Constructs a database connection
     public function __construct($db){
