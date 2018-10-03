@@ -17,9 +17,38 @@ switch($method){
         $db = $database->getConnection();
 
         $assignment = new Assignment($db);
-        $assignmentProp = array_fill_keys(array("id", "name", "createdDate"),"");
+        
+        // If parameter is available fetch id from database
+        if(!empty($_GET['id'])){
 
-        get($assignment, $assignmentProp);
+            // Uses parameter to fetch single object
+            $stmt = $assignment->get($_GET['id']);
+        }else{
+            // Fetches all objects
+            $stmt = $assignment->get();
+        }
+
+        // Creates arrays to send as JSON
+        $dataArr = array();
+        $dataArr["data"] = array();
+
+        // Fetches all rows
+        while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+
+            extract($row);
+ 
+            $item =array(
+                "id" => $Id,
+                "name" => $Name,
+                "createdDate" => $CreatedDate
+            );
+
+            // Add row to array
+            array_push($dataArr["data"], $item);
+        }
+        
+        echo json_encode($dataArr);
+
         break;
     case 'POST':
         break;

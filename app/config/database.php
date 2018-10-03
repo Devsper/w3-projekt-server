@@ -3,7 +3,7 @@ class Database{
  
     // Database settings
     private $host = "localhost";
-    private $dbName = "w3-projekt";
+    private $dbName = "w3_projekt";
     private $username = "jesper";
     private $password = "jesper";
     public $conn;

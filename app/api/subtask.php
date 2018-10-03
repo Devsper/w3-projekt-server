@@ -17,9 +17,37 @@ switch($method){
         $db = $database->getConnection();
 
         $subtask = new SubTask($db);
-        $subtaskProp = array_fill_keys(array("id", "name", "createdDate", "task_Id"),"");
 
-        get($subtask, $subtaskProp);
+        // If parameter is available fetch id from database
+        if(!empty($_GET['id'])){
+
+            // Uses parameter to fetch single object
+            $stmt = $subtask->get($_GET['id']);
+        }else{
+            // Fetches all objects
+            $stmt = $subtask->get();
+        }
+
+        // Creates arrays to send as JSON
+        $dataArr = array();
+        $dataArr["data"] = array();
+
+        // Fetches all rows
+        while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+
+            extract($row);
+    
+            $item =array(
+                "id" => $Id,
+                "name" => $Name,
+                "createdDate" => $CreatedDate,
+            );
+
+            // Add row to array
+            array_push($dataArr["data"], $item);
+        }
+        
+        echo json_encode($dataArr);
         break;
     case 'POST':
         break;

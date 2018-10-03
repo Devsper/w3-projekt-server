@@ -1,22 +1,7 @@
 <?php 
 
-/**
- * Fetches rows from chosen table in database
- *
- * @param Object $obj - Object representing table to fetch from
- * @param Array $objProp - Object properties representing columns in database
- */
-function get($obj, $objProp){   
 
-    // If parameter is available fetch id from database
-    if(!empty($_GET['id'])){
-
-        // Uses parameter to fetch single object
-        $stmt = $obj->get($_GET['id']);
-    }else{
-        // Fetches all objects
-        $stmt = $obj->get();
-    }
+function fetchRows($stmt, $objProp){   
 
     // Creates arrays to send as JSON
     $dataArr = array();
@@ -35,7 +20,5 @@ function get($obj, $objProp){
         array_push($dataArr["data"], $objProp);
     }
 
-    // Send back JSON-response
-    echo json_encode($dataArr);
-
+    return $dataArr;
 }

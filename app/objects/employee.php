@@ -18,14 +18,14 @@ class Employee{
         $this->conn = $db;
     }
 
-    function get($param = null){
+    function get($employeeId = null){
         
         // Fetches all employees if no parameter is passed else fetch specific employee
-        if(empty($param)){
+        if(empty($employeeId)){
             // select all query
             $query = "SELECT * FROM {$this->tableName}";
         }else{
-            $query = "SELECT * FROM {$this->tableName} WHERE {$this->tableName}.Id = $param";
+            $query = "SELECT * FROM {$this->tableName} WHERE {$this->tableName}.Id = $employeeId";
         }
         
         // prepare query statement
@@ -35,5 +35,9 @@ class Employee{
         $stmt->execute();
     
         return $stmt;
+    }
+
+    function getShifts($employeeId, $shiftId){
+        
     }
 }
