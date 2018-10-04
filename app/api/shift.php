@@ -8,7 +8,6 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';
-include_once '../functions.php';
 include_once '../objects/shift.php';
 
 
@@ -16,19 +15,19 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch($method){
     case 'GET':
+
         $database = new Database();
         $db = $database->getConnection();
-
         $shift = new Shift($db);
 
         // If parameter is available fetch id from database
         if(!empty($_GET['userId']) && empty($_GET['shiftId'])){
 
-            $shift->getUserShift($_GET['userId']);
+            $shift->get($_GET['userId']);
 
         }elseif(!empty($_GET['userId']) && !empty($_GET['shiftId'])){
 
-            $shift->get($_GET['shiftId']);
+            $shift->get($_GET['userId'],$_GET['shiftId']);
 
         }else{
             echo '{ "message": "Could not retrieve shifts." }';

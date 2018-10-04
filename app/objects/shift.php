@@ -20,12 +20,52 @@ class Shift extends Method{
         $this->conn = $db;
     }
 
-    function get($shiftId){
+    function get($userId, $shiftId = null){
+
+        if($userId && !$shiftId){
+
+            $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as SubName
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id
+                      INNER JOIN subtask st ON ss.SubTask_Id = st.Id
+                      WHERE e.Id = $userId
+                      AND s.employee_Id = $userId";
+        }
+
+        if($userId && $shiftId){
+            $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as SubName
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id
+                      INNER JOIN subtask st ON ss.SubTask_Id = st.Id
+                      WHERE e.Id = {$userId}
+                      AND s.employee_Id = {$userId}
+                      AND s.Id = {$shiftId}";
+        }
+
+         // prepare query statement
+         $stmt = $this->conn->prepare($query);
         
+         // execute query
+         $stmt->execute();
+         
+         $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "subName"),"");
+         $dataArr = parent::fetchRows($stmt, $shiftProp);
+
+         echo json_encode($dataArr);
+    }
+
+    function getSingleUserShift($userId, $shiftId){
+
         // Fetches all shifts if no parameter is passed else fetch specific shift
         if(!empty($shiftId)){
             // select all query
-            $query = "SELECT * FROM {$this->tableName} WHERE {$this->tableName}.Id = $shiftId";
+            $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as SubName
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id
+                      INNER JOIN subtask st ON ss.SubTask_Id = st.Id
+                      WHERE e.Id = {$userId}
+                      AND s.employee_Id = {$userId}
+                      AND s.Id = {$shiftId}";
             
             // prepare query statement
             $stmt = $this->conn->prepare($query);
@@ -33,7 +73,7 @@ class Shift extends Method{
             // execute query
             $stmt->execute();
             
-            $shiftProp = array_fill_keys(array("id", "startTime", "endTime"),"");
+            $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "subName"),"");
             $dataArr = parent::fetchRows($stmt, $shiftProp);
 
             echo json_encode($dataArr);
@@ -42,8 +82,8 @@ class Shift extends Method{
         return; 
     }
 
-    function getUserShift($userId){
-        
+    function getAllUserShifts($userId){
+
         // Fetches all shifts if no parameter is passed else fetch specific shift
         if(!empty($userId)){
             // select all query
@@ -62,7 +102,6 @@ class Shift extends Method{
         $stmt->execute();
 
         $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "subName"),"");
-
         $dataArr = parent::fetchRows($stmt, $shiftProp);
 
         echo json_encode($dataArr);
