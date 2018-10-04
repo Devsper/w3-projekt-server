@@ -11,6 +11,7 @@ class Shift{
     public $startTime;
     public $endTime;
     public $employee_Id;
+    public $relationshipTable;
 
     // Constructs a database connection
     public function __construct($db){
@@ -60,20 +61,36 @@ class Shift{
 
     function post(){
 
-        $query = "INSERT INTO {$this->tableName}
-                  SET StartTime:startTime, EndTime:endTime, Employee_Id:employee_Id";
+        if($this->relationshipTable == "shift_subtask"){
+            $idName = "SubTask_Id";
+        }
+
+        if($this->relationshipTable == "shift_assignment"){
+            $idName = "Assignment_Id";
+        }
+
+        $query = "START TRANSACTION;
+                  INSERT INTO {$this->tableName} (StartTime, EndTime, Employee_Id)
+                  VALUES (:startTime, :endTime, :employee_Id);
+                  SET @last_inserted_id = LAST_INSERT_ID();
+                  
+                  INSERT INTO {$this->relationshipTable} (Shift_Id, {$idName}) 
+                  VALUES (@last_inserted_id, :relation_Id);
+                  COMMIT";
 
         $stmt = $this->conn->prepare($query);
 
-        // sanitize
+        //sanitize
         $this->startTime = htmlspecialchars(strip_tags($this->startTime));
         $this->endTime = htmlspecialchars(strip_tags($this->endTime));
         $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
-    
+        $relationId = htmlspecialchars(strip_tags(3));
+
         // bind values
         $stmt->bindParam(":startTime", $this->startTime);
         $stmt->bindParam(":endTime", $this->endTime);
         $stmt->bindParam(":employee_Id", $this->employee_Id);
+        $stmt->bindParam(":relation_Id", $relationId);
     
         // execute query
         if($stmt->execute()){

@@ -55,8 +55,9 @@ switch($method){
 
         $shift->startTime = $data->startTime;
         $shift->endTime = $data->endTime;
-        $shift->employee_Id = $data->employeeId;
-        
+        $shift->employee_Id = $data->employee_Id;
+        $shift->relationshipTable = "shift_assignment";
+
         if($shift->post()){
 
             echo '{ "message": "Shift was added." }';
