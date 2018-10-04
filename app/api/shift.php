@@ -24,23 +24,16 @@ switch($method){
         // If parameter is available fetch id from database
         if(!empty($_GET['userId']) && empty($_GET['shiftId'])){
 
-            $stmt = $shift->getUserShift($_GET['userId']);
-            $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "subName"),"");
-            echo "what";
+            $shift->getUserShift($_GET['userId']);
+
         }elseif(!empty($_GET['userId']) && !empty($_GET['shiftId'])){
 
-            $stmt = $shift->get($_GET['shiftId']);
-            $shiftProp = array_fill_keys(array("id", "startTime", "endTime"),"");
-            echo "the";
+            $shift->get($_GET['shiftId']);
+
         }else{
-            // Fetches all objects
-            $stmt = $shift->get();
-            $shiftProp = array_fill_keys(array("id", "startTime", "endTime"),"");
+            echo '{ "message": "Could not retrieve shifts." }';
+            return;
         }
-
-        $dataArr = fetchRows($stmt, $shiftProp);
-
-        echo json_encode($dataArr);
 
         break;
     case 'POST':

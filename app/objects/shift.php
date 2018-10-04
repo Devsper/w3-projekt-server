@@ -1,6 +1,8 @@
 <?php 
 
-class Shift{
+require_once('method.php');
+
+class Shift extends Method{
     
     private $conn;
     private $tableName = "shift";
@@ -18,23 +20,26 @@ class Shift{
         $this->conn = $db;
     }
 
-    function get($shiftId = null){
+    function get($shiftId){
         
         // Fetches all shifts if no parameter is passed else fetch specific shift
-        if(empty($shiftId)){
+        if(!empty($shiftId)){
             // select all query
-            $query = "SELECT * FROM {$this->tableName}";
-        }else{
             $query = "SELECT * FROM {$this->tableName} WHERE {$this->tableName}.Id = $shiftId";
-        }
+            
+            // prepare query statement
+            $stmt = $this->conn->prepare($query);
         
-        // prepare query statement
-        $stmt = $this->conn->prepare($query);
-    
-        // execute query
-        $stmt->execute();
-    
-        return $stmt;
+            // execute query
+            $stmt->execute();
+            
+            $shiftProp = array_fill_keys(array("id", "startTime", "endTime"),"");
+            $dataArr = parent::fetchRows($stmt, $shiftProp);
+
+            echo json_encode($dataArr);
+        }
+
+        return; 
     }
 
     function getUserShift($userId){
@@ -55,8 +60,12 @@ class Shift{
     
         // execute query
         $stmt->execute();
-    
-        return $stmt;
+
+        $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "subName"),"");
+
+        $dataArr = parent::fetchRows($stmt, $shiftProp);
+
+        echo json_encode($dataArr);
     }
 
     function post(){
