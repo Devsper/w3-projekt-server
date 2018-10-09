@@ -19,17 +19,28 @@ switch($method){
         $database = new Database();
         $db = $database->getConnection();
         $shift = new Shift($db);
+        $shift->addRelationshipTables("all");
 
-        // If parameter is available fetch id from database
-        if(!empty($_GET['userId']) && empty($_GET['shiftId'])){
+        if(!empty($_GET['userId']) && !empty($_GET['shiftId'])){
 
-            $shift->get($_GET['userId']);
+            $shift->employee_Id = $_GET['userId'];
+            $shift->id = $_GET['shiftId'];
 
-        }elseif(!empty($_GET['userId']) && !empty($_GET['shiftId'])){
+            $shift->readSingle();
 
-            $shift->get($_GET['userId'],$_GET['shiftId']);
+        }elseif(!empty($_GET['userId']) && empty($_GET['date'])){
 
-        }else{
+            $shift->employee_Id = $_GET['userId'];
+
+            $shift->readAll();
+
+        }elseif(!empty($_GET['userId']) && !empty($_GET['date'])){
+
+            $shift->employee_Id = $_GET['userId'];
+            $shift->date = $_GET['date'];
+            $shift->readAllDate();
+        }
+        else{
             echo '{ "message": "Could not retrieve shifts." }';
             return;
         }
@@ -48,9 +59,14 @@ switch($method){
         $shift->startTime = $data->startTime;
         $shift->endTime = $data->endTime;
         $shift->employee_Id = $data->employee_Id;
-        $shift->relationshipTable = "shift_assignment";
+        $shift->shiftType = $data->shiftType;
+        
+        $shift->addRelationshipTables($shift->shiftType);
 
-        if($shift->post()){
+        // Adds relationship ID to relationship object
+        $shift->relationship[0]->id = $data->relationship->id;
+
+        if($shift->create()){
 
             echo '{ "message": "Shift was added." }';
         }
@@ -61,6 +77,28 @@ switch($method){
 
         break;
     case 'PUT':
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $shift = new Shift($db);
+        
+        $data = json_decode(file_get_contents("php://input"));
+        $shift->id = $data->shift_Id;
+        $shift->startTime = $data->startTime;
+        $shift->endTime = $data->endTime;
+        $shift->shiftType = $data->shiftType;
+        $shift->shiftTypeChanged = $data->shiftTypeChanged;
+
+        $shift->addRelationshipTables("all");
+        $shift->relationship[0]->id = $data->relationship->id;
+        $shift->relationship[1]->id = $data->relationship->id;
+
+        if($shift->update()){
+            echo '{ "message": "Shift was updated." }';
+        }else{
+            echo '{ "message": "Unable to update shift." }';
+        }
+
         break;
     case 'DELETE':
         break;
