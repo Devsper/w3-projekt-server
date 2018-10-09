@@ -242,6 +242,27 @@ class Shift extends Method{
         return false;
     }
 
+    function delete(){
+
+        $query = "DELETE FROM {$this->tableName}
+                  WHERE id = :shift_Id";
+
+        $stmt = $this->conn->prepare($query);
+        
+        // Sanitize
+        $this->id = htmlspecialchars(strip_tags($this->id));
+        
+        // Bind
+        $stmt->bindParam(":shift_Id", $this->id);
+
+        // execute query
+        if($stmt->execute()){
+            return true;
+        }
+    
+        return false;
+    }
+
     public function addRelationshipTables($relationship){
 
         if($relationship == "subTask"){

@@ -83,7 +83,8 @@ switch($method){
         $shift = new Shift($db);
         
         $data = json_decode(file_get_contents("php://input"));
-        $shift->id = $data->shift_Id;
+
+        $shift->id = $data->id;
         $shift->startTime = $data->startTime;
         $shift->endTime = $data->endTime;
         $shift->shiftType = $data->shiftType;
@@ -101,6 +102,21 @@ switch($method){
 
         break;
     case 'DELETE':
+
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $shift = new Shift($db);
+        
+        $data = json_decode(file_get_contents("php://input"));
+        $shift->id = $data->id;
+
+        if($shift->delete()){
+            echo '{ "message": "Shift was deleted." }';
+        }else{
+            echo '{ "message": "Unable to delete shift." }';
+        }
+
         break;
     default:
         echo 'Default';
