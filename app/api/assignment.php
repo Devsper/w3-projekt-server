@@ -2,10 +2,12 @@
 
 // required headers
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';
-include_once '../functions.php';
 include_once '../objects/assignment.php';
 
 
@@ -17,37 +19,11 @@ switch($method){
         $db = $database->getConnection();
 
         $assignment = new Assignment($db);
-        
-        // If parameter is available fetch id from database
-        if(!empty($_GET['id'])){
+        $assignment->addRelationship('employee');
+        $assignment->relationships[0]->id = 1;
 
-            // Uses parameter to fetch single object
-            $stmt = $assignment->get($_GET['id']);
-        }else{
-            // Fetches all objects
-            $stmt = $assignment->get();
-        }
-
-        // Creates arrays to send as JSON
-        $dataArr = array();
-        $dataArr["data"] = array();
-
-        // Fetches all rows
-        while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-
-            extract($row);
- 
-            $item =array(
-                "id" => $Id,
-                "name" => $Name,
-                "createdDate" => $CreatedDate
-            );
-
-            // Add row to array
-            array_push($dataArr["data"], $item);
-        }
-        
-        echo json_encode($dataArr);
+        // Uses parameter to fetch single object
+        $stmt = $assignment->read();
 
         break;
     case 'POST':

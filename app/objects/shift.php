@@ -31,8 +31,8 @@ class Shift extends Method{
                     FROM employee e, {$this->tableName} s 
                     INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id 
                     INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id 
-                    WHERE e.Id = :userId 
-                    AND s.employee_Id = :userId 
+                    WHERE e.Id = :employee_Id 
+                    AND s.employee_Id = :employee_Id 
                     
                     UNION 
                     
@@ -40,8 +40,8 @@ class Shift extends Method{
                     FROM employee e, {$this->tableName} s 
                     INNER JOIN {$this->relationship[1]->relTableName} sa ON s.Id = sa.Shift_Id 
                     INNER JOIN {$this->relationship[1]->tableName} a ON sa.{$this->relationship[1]->idColumnName} = a.Id 
-                    WHERE e.Id = :userId 
-                    AND s.employee_Id = :userId;";
+                    WHERE e.Id = :employee_Id 
+                    AND s.employee_Id = :employee_Id;";
 
          // prepare query statement
          $stmt = $this->conn->prepare($query);
@@ -49,7 +49,7 @@ class Shift extends Method{
          $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
 
          // bind values
-         $stmt->bindParam(":userId", $this->employee_Id);
+         $stmt->bindParam(":employee_Id", $this->employee_Id);
 
          // execute query
          $stmt->execute();
@@ -66,8 +66,8 @@ class Shift extends Method{
                     FROM employee e, {$this->tableName} s 
                     INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id
                     INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id
-                    WHERE e.Id = :userId
-                    AND s.employee_Id = :userId
+                    WHERE e.Id = :employee_Id
+                    AND s.employee_Id = :employee_Id
                     AND YEAR(s.StartTime) = :y
                     AND MONTH(s.StartTime) = :m
                     
@@ -77,24 +77,23 @@ class Shift extends Method{
                     FROM employee e, {$this->tableName} s 
                     INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
                     INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
-                    WHERE e.Id = :userId
-                    AND s.employee_Id = :userId
+                    WHERE e.Id = :employee_Id
+                    AND s.employee_Id = :employee_Id
                     AND YEAR(s.StartTime) = :y 
                     AND MONTH(s.StartTime) = :m;";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
 
+        $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
+        $this->date = htmlspecialchars(strip_tags($this->date));
+
         $dateArr = explode("-", $this->date);
         $year = $dateArr[0];
         $month = $dateArr[1];
-        
-        $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
-        $year = htmlspecialchars(strip_tags($year));
-        $month = htmlspecialchars(strip_tags($month));
 
         // bind values
-        $stmt->bindParam(":userId", $this->employee_Id);
+        $stmt->bindParam(":employee_Id", $this->employee_Id);
         $stmt->bindParam(":y", $year);
         $stmt->bindParam(":m", $month);
 
@@ -114,8 +113,8 @@ class Shift extends Method{
                   FROM employee e, {$this->tableName} s 
                   INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_id
                   INNER JOIN {$this->relationship[0]->tableName}  st ON ss.{$this->relationship[0]->idColumnName} = st.Id
-                  WHERE e.Id = :userId
-                  AND s.employee_Id = :userId
+                  WHERE e.Id = :employee_Id
+                  AND s.employee_Id = :employee_Id
                   AND s.Id = :shiftId
                   
                   UNION
@@ -124,8 +123,8 @@ class Shift extends Method{
                   FROM employee e, {$this->tableName} s 
                   INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
                   INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
-                  WHERE e.Id = :userId
-                  AND s.employee_Id = :userId
+                  WHERE e.Id = :employee_Id
+                  AND s.employee_Id = :employee_Id
                   AND s.Id = :shiftId;";
         
         // prepare query statement
@@ -135,7 +134,7 @@ class Shift extends Method{
         $this->id = htmlspecialchars(strip_tags($this->id));
 
         // bind values
-        $stmt->bindParam(":userId", $this->employee_Id);
+        $stmt->bindParam(":employee_Id", $this->employee_Id);
         $stmt->bindParam(":shiftId", $this->id);
 
         // execute query
@@ -150,15 +149,12 @@ class Shift extends Method{
 
     function create(){
 
-        $idName = $this->relationship[0]->idColumnName;
-        $relationshipTable = $this->relationship[0]->relTableName;
-
         $query = "START TRANSACTION;
                   INSERT INTO {$this->tableName} (StartTime, EndTime, Employee_Id)
                   VALUES (:startTime, :endTime, :employee_Id);
                   SET @last_inserted_id = LAST_INSERT_ID();
                   
-                  INSERT INTO {$relationshipTable} (Shift_Id, {$idName}) 
+                  INSERT INTO {$this->relationship[0]->relTableName} (Shift_Id, {$this->relationship[0]->idColumnName}) 
                   VALUES (@last_inserted_id, :relation_Id);
                   COMMIT";
 

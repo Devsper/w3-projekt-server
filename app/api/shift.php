@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 // required headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");
@@ -21,22 +23,24 @@ switch($method){
         $shift = new Shift($db);
         $shift->addRelationshipTables("all");
 
-        if(!empty($_GET['userId']) && !empty($_GET['shiftId'])){
+        $_GET['employeeId'] = $_SESSION['employeeId'];
 
-            $shift->employee_Id = $_GET['userId'];
+        if(!empty($_GET['employeeId']) && !empty($_GET['shiftId'])){
+
+            $shift->employee_Id = $_GET['employeeId'];
             $shift->id = $_GET['shiftId'];
 
             $shift->readSingle();
 
-        }elseif(!empty($_GET['userId']) && empty($_GET['date'])){
+        }elseif(!empty($_GET['employeeId']) && empty($_GET['date'])){
 
-            $shift->employee_Id = $_GET['userId'];
+            $shift->employee_Id = $_GET['employeeId'];
 
             $shift->readAll();
 
-        }elseif(!empty($_GET['userId']) && !empty($_GET['date'])){
+        }elseif(!empty($_GET['employeeId']) && !empty($_GET['date'])){
 
-            $shift->employee_Id = $_GET['userId'];
+            $shift->employee_Id = $_GET['employeeId'];
             $shift->date = $_GET['date'];
             $shift->readAllDate();
         }
@@ -67,10 +71,8 @@ switch($method){
         $shift->relationship[0]->id = $data->relationship->id;
 
         if($shift->create()){
-
             echo '{ "message": "Shift was added." }';
         }
-        // if unable to create the product, tell the user
         else{
             echo '{ "message": "Unable to add shift." }';
         }

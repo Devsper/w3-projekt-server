@@ -2,11 +2,17 @@
 
 class Method{
 
-    protected function fetchRows($stmt, $objProp){   
+    protected function fetchRows($stmt, $objProp, $wrapData = true){   
 
         // Creates arrays to send as JSON
+
         $dataArr = array();
-        $dataArr["data"] = array();
+
+        if($wrapData){
+            $dataArr["data"] = array();
+        }
+
+        
     
         // Fetches all rows
         while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
@@ -18,7 +24,11 @@ class Method{
             }
     
             // Add row to array
-            array_push($dataArr["data"], $objProp);
+            if($wrapData){
+                array_push($dataArr["data"], $objProp);
+            }else{
+                array_push($dataArr, $objProp);
+            }
         }
     
         return $dataArr;
