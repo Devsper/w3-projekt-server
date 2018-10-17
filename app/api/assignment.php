@@ -14,30 +14,74 @@ include_once '../objects/assignment.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+$database = new Database();
+$db = $database->getConnection();
+
+$assignment = new Assignment($db);
+
 switch($method){
     case 'GET':
-        $database = new Database();
-        $db = $database->getConnection();
 
-        $assignment = new Assignment($db);
-        $assignment->addRelationshipTables('employee');
-        $assignment->relationships[0]->id = $_SESSION['employeeId'];
+        if(!empty($_GET['id'])){
+            $assignment->id = $_GET['id'];
+        }
 
-        $result = $assignment->getEmployeeAssignments();
+        $result = $assignment->read();
+
+        echo json_encode($result);
+
+        // $assignment->addRelationshipTables('employee');
+        // $assignment->relationships[0]->id = $_SESSION['employeeId'];
+
+        // $result = $assignment->getEmployeeAssignments();
         
-        if(count($result[0]) == 1){
-            $hasBeenIncluded = true;
-            include_once 'task.php';
-        }else{
-            echo json_encode($result);
-        } 
+        // if(count($result[0]) == 1){
+        //     $hasBeenIncluded = true;
+        //     include_once 'task.php';
+        // }else{
+        //     echo json_encode($result);
+        // } 
 
         break;
     case 'POST':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $assignment->name = $data->name;
+
+        if($assignment->create()){
+            echo '{ "message": "Assignment was added." }';
+        }
+        else{
+            echo '{ "message": "Unable to add assignment." }';
+        }
         break;
     case 'PUT':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $assignment->name = $data->name;
+        $assignment->id = $data->id;
+
+        if($assignment->update()){
+            echo '{ "message": "Assignment was updated." }';
+        }
+        else{
+            echo '{ "message": "Unable to update assignment." }';
+        }
         break;
     case 'DELETE':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $assignment->id = $data->id;
+
+        if($assignment->delete()){
+            echo '{ "message": "Assignment was deleted." }';
+        }
+        else{
+            echo '{ "message": "Unable to delete assignment." }';
+        }
         break;
     default:
         echo 'Default';

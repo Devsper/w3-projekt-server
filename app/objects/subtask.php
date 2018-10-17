@@ -1,6 +1,8 @@
 <?php 
 
-class SubTask{
+require_once('method.php');
+
+class Subtask extends Method{
     
     private $conn;
     private $tableName = "subtask";
@@ -20,53 +22,58 @@ class SubTask{
 
         if($this->id){
 
-            $query = "SELECT st.Id, st.Name FROM subtask st WHERE t.Task_Id = :task_id AND t.id = :id";
+            $query = "SELECT st.Id, st.StName FROM subtask st WHERE st.Task_Id = :task_id AND st.id = :id";
 
             // prepare query statement
             $stmt = $this->conn->prepare($query);
         
-            $this->task_id = htmlspecialchars(strip_tags($this->task_id));
+            $this->task_id = htmlspecialchars(strip_tags($this->task_Id));
             $this->id = htmlspecialchars(strip_tags($this->id));
             // bind values
             $stmt->bindParam(":task_id", $this->task_id);
             $stmt->bindParam(":id", $this->id);
         }else{
-            $query = "SELECT st.Id, st.Name FROM {$this->tableName} st WHERE Task_Id = :task_id";
+            $query = "SELECT st.Id, st.StName FROM {$this->tableName} st WHERE Task_Id = :task_id";
 
             // prepare query statement
             $stmt = $this->conn->prepare($query);
 
-            $this->task_id = htmlspecialchars(strip_tags($this->task_id));
+            $this->task_Id = htmlspecialchars(strip_tags($this->task_Id));
             // bind values
-            $stmt->bindParam(":task_id", $this->task_id);
+            $stmt->bindParam(":task_id", $this->task_Id);
         }
 
         // execute query
         $stmt->execute();
+
+        $subtaskProp = array_fill_keys(array("StName", "id"),"");
+        $dataArr = parent::fetchRows($stmt, $subtaskProp);
     
-        return $stmt;
+        return $dataArr;
     }
     function create(){
-        
-        $query = "INSERT INTO {$this->tableName} (Name, Task_Id) VALUES (':name', ':task_id')";
+
+        $query = "INSERT INTO {$this->tableName} (Name, Task_Id) VALUES (:name, :task_Id)";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
-    
-        $this->task_id = htmlspecialchars(strip_tags($this->task_id));
+        
+        $this->task_Id = htmlspecialchars(strip_tags($this->task_Id));
         $this->name = htmlspecialchars(strip_tags($this->name));
 
         // bind values
-        $stmt->bindParam(":task_id", $this->task_id);
-        $stmt->bindParam(":name", $this->name);
+        $stmt->bindParam(':name', $this->name);
+        $stmt->bindParam(':task_Id', $this->task_Id);
+
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
     function update(){
 
-        $query = "UPDATE {$this->tableName} SET name =:name WHERE id=:id";
+        $query = "UPDATE {$this->tableName} SET Name =:name WHERE id=:id";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -77,10 +84,12 @@ class SubTask{
         // bind values
         $stmt->bindParam(":id", $this->id);
         $stmt->bindParam(":name", $this->name);
+
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
     function delete(){
         
@@ -93,10 +102,12 @@ class SubTask{
 
         // bind values
         $stmt->bindParam(":id", $this->id);
+        
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
 
     function get($param = null){

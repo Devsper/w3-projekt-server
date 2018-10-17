@@ -11,34 +11,64 @@ include_once '../objects/task.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+$database = new Database();
+$db = $database->getConnection();
+
+$task = new Task($db);
+
 switch($method){
     case 'GET':
 
-        $database = new Database();
-        $db = $database->getConnection();
-
-        $task = new Task($db);
-
-        if($hasBeenIncluded){
-
-            $result = $task->getEmployeeTasks();
-            echo json_encode($result);
-        }else{
-
+        if(!empty($_GET['id'])){
+            $task->id = $_GET['id'];
         }
 
-        // $task->addRelationshipTables('employee');
-        // $task->relationships[0]->id = $_SESSION['employeeId'];
+        $task->assignment_Id = $_GET['assignment_Id'];
 
         $result = $task->read();
 
         echo json_encode($result);
         break;
     case 'POST':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $task->name = $data->name;
+        $task->assignment_Id = $data->assignment_Id;
+
+        if($task->create()){
+            echo '{ "message": "Task was added." }';
+        }
+        else{
+            echo '{ "message": "Unable to add task." }';
+        }
         break;
     case 'PUT':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $task->name = $data->name;
+        $task->id = $data->id;
+
+        if($task->update()){
+            echo '{ "message": "Task was updated." }';
+        }
+        else{
+            echo '{ "message": "Unable to update task." }';
+        }
         break;
     case 'DELETE':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $task->id = $data->id;
+
+        if($task->delete()){
+            echo '{ "message": "Task was deleted." }';
+        }
+        else{
+            echo '{ "message": "Unable to delete task." }';
+        }
         break;
     default:
         echo 'Default';

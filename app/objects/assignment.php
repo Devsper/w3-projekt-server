@@ -42,7 +42,7 @@ class Assignment extends Method{
 
         if($this->id){
 
-            $query = "SELECT a.Id, a.Name FROM {$this->tableName} a WHERE t.id = :id";
+            $query = "SELECT a.Id, a.Name FROM {$this->tableName} a WHERE a.id = :id";
 
             // prepare query statement
             $stmt = $this->conn->prepare($query);
@@ -61,11 +61,14 @@ class Assignment extends Method{
         // execute query
         $stmt->execute();
     
-        return $stmt;
+        $assignmentProp = array_fill_keys(array("name", "id"),"");
+        $dataArr = parent::fetchRows($stmt, $assignmentProp);
+    
+        return $dataArr;
     }
     function create(){
 
-        $query = "INSERT INTO {$this->tableName} (Name) VALUES (':name')";
+        $query = "INSERT INTO {$this->tableName} (Name) VALUES (:name)";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -74,14 +77,16 @@ class Assignment extends Method{
 
         // bind values
         $stmt->bindParam(":name", $this->name);
+         
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+         if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
     function update(){
         
-        $query = "UPDATE {$this->tableName} SET name =:name WHERE id=:id";
+        $query = "UPDATE {$this->tableName} SET Name =:name WHERE id=:id";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -92,10 +97,12 @@ class Assignment extends Method{
         // bind values
         $stmt->bindParam(":id", $this->id);
         $stmt->bindParam(":name", $this->name);
+        
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
     function delete(){
 
@@ -108,10 +115,12 @@ class Assignment extends Method{
 
         // bind values
         $stmt->bindParam(":id", $this->id);
+        
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
 
     public function addRelationshipTables($relationship){

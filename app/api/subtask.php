@@ -2,59 +2,80 @@
 
 // required headers
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';
-include_once '../functions.php';
 include_once '../objects/subtask.php';
-
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+$database = new Database();
+$db = $database->getConnection();
+
+$subtask = new Subtask($db);
+
 switch($method){
     case 'GET':
-        $database = new Database();
-        $db = $database->getConnection();
 
-        $subtask = new SubTask($db);
-
+        print_r($subtask);
         // If parameter is available fetch id from database
         if(!empty($_GET['id'])){
-
-            // Uses parameter to fetch single object
-            $stmt = $subtask->get($_GET['id']);
-        }else{
-            // Fetches all objects
-            $stmt = $subtask->get();
+            $subtask->id = $_GET['id'];
         }
 
-        // Creates arrays to send as JSON
-        $dataArr = array();
-        $dataArr["data"] = array();
+        $subtask->task_Id = $_GET['task_Id'];
 
-        // Fetches all rows
-        while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-
-            extract($row);
-    
-            $item =array(
-                "id" => $Id,
-                "name" => $Name,
-                "createdDate" => $CreatedDate,
-            );
-
-            // Add row to array
-            array_push($dataArr["data"], $item);
-        }
+        $result = $subtask->read();
         
-        echo json_encode($dataArr);
+        echo json_encode($result);
+
         break;
     case 'POST':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $subtask->name = $data->name;
+        $subtask->task_Id = $data->task_Id;
+
+        
+        if($subtask->create()){
+            echo '{ "message": "Subtask was added." }';
+        }
+        else{
+            echo '{ "message": "Unable to add subtask." }';
+        }
         break;
     case 'PUT':
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $subtask->name = $data->name;
+        $subtask->id = $data->id;
+        
+        if($subtask->update()){
+            echo '{ "message": "Subtask was updated." }';
+        }
+        else{
+            echo '{ "message": "Unable to update subtask." }';
+        }
+
         break;
     case 'DELETE':
-        break;
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        $subtask->id = $data->id;
+        
+        if($subtask->delete()){
+            echo '{ "message": "Subtask was deleted." }';
+        }
+        else{
+            echo '{ "message": "Unable to delete subtask." }';
+        }
+            break;
     default:
         echo 'Default';
 }

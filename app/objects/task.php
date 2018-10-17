@@ -1,5 +1,7 @@
 <?php 
 
+require_once('method.php');
+
 class Task extends Method{
     
     private $conn;
@@ -20,7 +22,7 @@ class Task extends Method{
         
         if($this->id){
 
-            $query = "SELECT s.Id, s.Name FROM {$this->tableName} s WHERE t.Assignment_Id = :assignment_Id AND t.id = :id";
+            $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE t.Assignment_Id = :assignment_Id AND t.id = :id";
 
             // prepare query statement
             $stmt = $this->conn->prepare($query);
@@ -31,7 +33,7 @@ class Task extends Method{
             $stmt->bindParam(":assignment_Id", $this->assignment_Id);
             $stmt->bindParam(":id", $this->id);
         }else{
-            $query = "SELECT s.Id, s.Name FROM {$this->tableName} s WHERE Assignment_Id = :assignment_Id";
+            $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE Assignment_Id = :assignment_Id";
 
             // prepare query statement
             $stmt = $this->conn->prepare($query);
@@ -43,17 +45,20 @@ class Task extends Method{
 
         // execute query
         $stmt->execute();
+
+        $taskProp = array_fill_keys(array("name", "id"),"");
+        $dataArr = parent::fetchRows($stmt, $taskProp);
     
-        return $stmt;
+        return $dataArr;
     }
     function create(){
 
-        $query = "INSERT INTO {$this->tableName} (Name, Assignment_Id) VALUES (':name', ':assignment_Id')";
+        $query = "INSERT INTO {$this->tableName} (Name, Assignment_Id) VALUES (:name, :assignment_Id)";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->assignment_Id = htmlspecialchars(strip_tags($this->task_id));
+        $this->assignment_Id = htmlspecialchars(strip_tags($this->assignment_Id));
         $this->name = htmlspecialchars(strip_tags($this->name));
 
         // bind values
@@ -61,12 +66,16 @@ class Task extends Method{
         $stmt->bindParam(":name", $this->name);
         // execute query
         $stmt->execute();
-    
-        return $stmt;
+        
+         // execute query
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
     function update(){
 
-        $query = "UPDATE {$this->tableName} SET name =:name WHERE id=:id";
+        $query = "UPDATE {$this->tableName} SET Name =:name WHERE id=:id";
         
         // prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -77,10 +86,12 @@ class Task extends Method{
         // bind values
         $stmt->bindParam(":id", $this->id);
         $stmt->bindParam(":name", $this->name);
+        
         // execute query
-        $stmt->execute();
-    
-        return $stmt;
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
     function delete(){
 
@@ -93,10 +104,12 @@ class Task extends Method{
 
         // bind values
         $stmt->bindParam(":id", $this->id);
-        // execute query
-        $stmt->execute();
     
-        return $stmt;
+        // execute query
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
 
     function getEmployeeTasks(){
