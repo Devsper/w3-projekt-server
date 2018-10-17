@@ -12,7 +12,7 @@ require_once('config/database.php');
 require_once('objects/employee.php');
 
 
-if($_SERVER['REQUEST_METHOD'] == "POST"){
+if($_SERVER['REQUEST_METHOD'] == "POST" && !isset($_SESSION['employeeSession'])){
 
     if(!isset($_SESSION['employeeSession'])){
         $database = new Database();
@@ -30,9 +30,9 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
         $employee->password = $data->pass;
 
         if($employee->login()){
-
+            
             $res = array(
-                "message" => true
+                "message" => true,
             );
 
             echo json_encode($res);

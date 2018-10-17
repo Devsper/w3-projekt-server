@@ -12,8 +12,6 @@ class Method{
             $dataArr["data"] = array();
         }
 
-        
-    
         // Fetches all rows
         while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
     

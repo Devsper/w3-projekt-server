@@ -1,5 +1,6 @@
 <?php
 
+session_start();
 // required headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");
@@ -19,11 +20,17 @@ switch($method){
         $db = $database->getConnection();
 
         $assignment = new Assignment($db);
-        $assignment->addRelationship('employee');
-        $assignment->relationships[0]->id = 1;
+        $assignment->addRelationshipTables('employee');
+        $assignment->relationships[0]->id = $_SESSION['employeeId'];
 
-        // Uses parameter to fetch single object
-        $stmt = $assignment->read();
+        $result = $assignment->getEmployeeAssignments();
+        
+        if(count($result[0]) == 1){
+            $hasBeenIncluded = true;
+            include_once 'task.php';
+        }else{
+            echo json_encode($result);
+        } 
 
         break;
     case 'POST':

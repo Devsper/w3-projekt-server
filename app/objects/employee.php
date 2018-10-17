@@ -37,6 +37,7 @@ class Employee extends Method{
         $stmt->execute();
     
         return $stmt;
+        
     }
 
     function login(){
@@ -58,7 +59,8 @@ class Employee extends Method{
         if(count($dataArr) > 0){
 
             if($this->password == $dataArr[0]['password']){
- 
+                
+                //echo $dataArr[0]['id'];
                 $_SESSION['employeeSession'] = true;
                 $_SESSION['employeeId'] = $dataArr[0]['id'];
                 return true;
