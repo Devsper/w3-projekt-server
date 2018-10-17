@@ -46,7 +46,7 @@ class Employee extends Method{
 
         $stmt = $this->conn->prepare($query);
 
-        $this->username = htmlspecialchars(strip_tags($this->username));
+        $this->username = parent::sanitize($this->username);
         
         $stmt->bindParam(":username", $this->username);
         

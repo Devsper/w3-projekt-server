@@ -47,7 +47,7 @@ class Assignment extends Method{
             // prepare query statement
             $stmt = $this->conn->prepare($query);
         
-            $this->id = htmlspecialchars(strip_tags($this->id));
+            $this->id = parent::sanitize($this->id);
             // bind values
             $stmt->bindParam(":id", $this->id);
 
@@ -73,7 +73,7 @@ class Assignment extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->name = parent::sanitize($this->name);
 
         // bind values
         $stmt->bindParam(":name", $this->name);
@@ -91,8 +91,8 @@ class Assignment extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->id = parent::sanitize($this->id);
+        $this->name = parent::sanitize($this->name);
 
         // bind values
         $stmt->bindParam(":id", $this->id);
@@ -111,7 +111,7 @@ class Assignment extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->id = htmlspecialchars(strip_tags($this->id));
+        $this->id = parent::sanitize($this->id);
 
         // bind values
         $stmt->bindParam(":id", $this->id);

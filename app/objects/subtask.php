@@ -27,8 +27,8 @@ class Subtask extends Method{
             // prepare query statement
             $stmt = $this->conn->prepare($query);
         
-            $this->task_id = htmlspecialchars(strip_tags($this->task_Id));
-            $this->id = htmlspecialchars(strip_tags($this->id));
+            $this->task_id = parent::sanitize($this->task_Id);
+            $this->id = parent::sanitize($this->id);
             // bind values
             $stmt->bindParam(":task_id", $this->task_id);
             $stmt->bindParam(":id", $this->id);
@@ -38,7 +38,7 @@ class Subtask extends Method{
             // prepare query statement
             $stmt = $this->conn->prepare($query);
 
-            $this->task_Id = htmlspecialchars(strip_tags($this->task_Id));
+            $this->task_Id = parent::sanitize($this->task_Id);
             // bind values
             $stmt->bindParam(":task_id", $this->task_Id);
         }
@@ -58,8 +58,8 @@ class Subtask extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
         
-        $this->task_Id = htmlspecialchars(strip_tags($this->task_Id));
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->task_Id = parent::sanitize($this->task_Id);
+        $this->name = parent::sanitize($this->name);
 
         // bind values
         $stmt->bindParam(':name', $this->name);
@@ -78,8 +78,8 @@ class Subtask extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->id = parent::sanitize($this->id);
+        $this->name = parent::sanitize($this->name);
 
         // bind values
         $stmt->bindParam(":id", $this->id);
@@ -98,7 +98,7 @@ class Subtask extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->id = htmlspecialchars(strip_tags($this->id));
+        $this->id = parent::sanitize($this->id);
 
         // bind values
         $stmt->bindParam(":id", $this->id);
@@ -108,24 +108,5 @@ class Subtask extends Method{
             return true;
         }
         return false;
-    }
-
-    function get($param = null){
-        
-        // Fetches all employees if no parameter is passed else fetch specific employee
-        if(empty($param)){
-            // select all query
-            $query = "SELECT * FROM {$this->tableName}";
-        }else{
-            $query = "SELECT * FROM {$this->tableName} WHERE {$this->tableName}.Id = $param";
-        }
-        
-        // prepare query statement
-        $stmt = $this->conn->prepare($query);
-    
-        // execute query
-        $stmt->execute();
-    
-        return $stmt;
     }
 }

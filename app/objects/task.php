@@ -27,8 +27,8 @@ class Task extends Method{
             // prepare query statement
             $stmt = $this->conn->prepare($query);
         
-            $this->task_id = htmlspecialchars(strip_tags($this->assignment_Id));
-            $this->id = htmlspecialchars(strip_tags($this->id));
+            $this->task_id = parent::sanitize($this->assignment_Id);
+            $this->id = parent::sanitize($this->id);
             // bind values
             $stmt->bindParam(":assignment_Id", $this->assignment_Id);
             $stmt->bindParam(":id", $this->id);
@@ -38,7 +38,7 @@ class Task extends Method{
             // prepare query statement
             $stmt = $this->conn->prepare($query);
 
-            $this->task_id = htmlspecialchars(strip_tags($this->assignment_Id));
+            $this->task_id = parent::sanitize($this->assignment_Id);
             // bind values
             $stmt->bindParam(":assignment_Id", $this->assignment_Id);
         }
@@ -58,8 +58,8 @@ class Task extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->assignment_Id = htmlspecialchars(strip_tags($this->assignment_Id));
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->assignment_Id = parent::sanitize($this->assignment_Id);
+        $this->name = parent::sanitize($this->name);
 
         // bind values
         $stmt->bindParam(":assignment_Id", $this->assignment_Id);
@@ -80,8 +80,8 @@ class Task extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->id = htmlspecialchars(strip_tags($this->id));
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->id = parent::sanitize($this->id);
+        $this->name = parent::sanitize($this->name);
 
         // bind values
         $stmt->bindParam(":id", $this->id);
@@ -100,7 +100,7 @@ class Task extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
     
-        $this->id = htmlspecialchars(strip_tags($this->id));
+        $this->id = parent::sanitize($this->id);
 
         // bind values
         $stmt->bindParam(":id", $this->id);
@@ -125,7 +125,7 @@ class Task extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
 
-        $employeeId = htmlspecialchars(strip_tags($_SESSION['employeeId']));
+        $employeeId = parent::sanitize($_SESSION['employeeId']);
 
         // bind values
         $stmt->bindParam(":employee_Id", $employeeId);
