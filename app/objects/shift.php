@@ -25,31 +25,41 @@ class Shift extends Method{
         $this->conn = $db;
     }
 
-    function readAll(){
+    function read(){
 
-        $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName 
-                    FROM employee e, {$this->tableName} s 
-                    INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id 
-                    INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id 
-                    WHERE e.Id = :employee_Id 
-                    AND s.employee_Id = :employee_Id 
-                    
-                    UNION 
-                    
-                    SELECT e.Name, s.StartTime, s.EndTime, a.Name
-                    FROM employee e, {$this->tableName} s 
-                    INNER JOIN {$this->relationship[1]->relTableName} sa ON s.Id = sa.Shift_Id 
-                    INNER JOIN {$this->relationship[1]->tableName} a ON sa.{$this->relationship[1]->idColumnName} = a.Id 
-                    WHERE e.Id = :employee_Id 
-                    AND s.employee_Id = :employee_Id;";
+        if($this->id){
+             // Get a single shift for a user
+            $query = $this->getSqlQuery("getSingle");
+        }elseif($this->date){
+            $query = $this->getSqlQuery("getAllDate");
+        }else{
+            $query = $this->getSqlQuery("getAll");
+        }
 
          // prepare query statement
-         $stmt = $this->conn->prepare($query);
-        
-         $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
+        $stmt = $this->conn->prepare($query);
 
-         // bind values
-         $stmt->bindParam(":employee_Id", $this->employee_Id);
+        if($this->id){
+           
+            $this->id = parent::sanitize($this->id);
+            $stmt->bindParam(":shiftId", $this->id);
+        }
+         
+        if($this->date){
+            
+            $this->date = parent::sanitize($this->date);
+            
+            $dateArr = explode("-", $this->date);
+
+            $year = $dateArr[0];
+            $month = $dateArr[1];
+
+            $stmt->bindParam(":y", $year);
+            $stmt->bindParam(":m", $month);
+        }
+
+        $this->employee_Id = parent::sanitize($this->employee_Id);
+        $stmt->bindParam(":employee_Id", $this->employee_Id);
 
          // execute query
          $stmt->execute();
@@ -58,93 +68,6 @@ class Shift extends Method{
          $dataArr = parent::fetchRows($stmt, $shiftProp);
 
          echo json_encode($dataArr);
-    }
-
-    function readAllDate(){
-
-        $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
-                    FROM employee e, {$this->tableName} s 
-                    INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id
-                    INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id
-                    WHERE e.Id = :employee_Id
-                    AND s.employee_Id = :employee_Id
-                    AND YEAR(s.StartTime) = :y
-                    AND MONTH(s.StartTime) = :m
-                    
-                    UNION 
-
-                    SELECT e.Name, s.StartTime, s.EndTime, st.name
-                    FROM employee e, {$this->tableName} s 
-                    INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
-                    INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
-                    WHERE e.Id = :employee_Id
-                    AND s.employee_Id = :employee_Id
-                    AND YEAR(s.StartTime) = :y 
-                    AND MONTH(s.StartTime) = :m;";
-        
-        // prepare query statement
-        $stmt = $this->conn->prepare($query);
-
-        $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
-        $this->date = htmlspecialchars(strip_tags($this->date));
-
-        $dateArr = explode("-", $this->date);
-        $year = $dateArr[0];
-        $month = $dateArr[1];
-
-        // bind values
-        $stmt->bindParam(":employee_Id", $this->employee_Id);
-        $stmt->bindParam(":y", $year);
-        $stmt->bindParam(":m", $month);
-
-        // execute query
-        $stmt->execute();
-        
-        $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "taskName"),"");
-        $dataArr = parent::fetchRows($stmt, $shiftProp);
-
-        echo json_encode($dataArr);
-    }
-
-    function readSingle(){
-
-        // Get a single shift for a user
-        $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
-                  FROM employee e, {$this->tableName} s 
-                  INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_id
-                  INNER JOIN {$this->relationship[0]->tableName}  st ON ss.{$this->relationship[0]->idColumnName} = st.Id
-                  WHERE e.Id = :employee_Id
-                  AND s.employee_Id = :employee_Id
-                  AND s.Id = :shiftId
-                  
-                  UNION
-
-                  SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
-                  FROM employee e, {$this->tableName} s 
-                  INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
-                  INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
-                  WHERE e.Id = :employee_Id
-                  AND s.employee_Id = :employee_Id
-                  AND s.Id = :shiftId;";
-        
-        // prepare query statement
-        $stmt = $this->conn->prepare($query);
-        
-        $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
-        $this->id = htmlspecialchars(strip_tags($this->id));
-
-        // bind values
-        $stmt->bindParam(":employee_Id", $this->employee_Id);
-        $stmt->bindParam(":shiftId", $this->id);
-
-        // execute query
-        $stmt->execute();
-        
-        
-        $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "taskName"),"");
-        $dataArr = parent::fetchRows($stmt, $shiftProp);
-
-        echo json_encode($dataArr);
     }
 
     function create(){
@@ -161,10 +84,10 @@ class Shift extends Method{
         $stmt = $this->conn->prepare($query);
 
         //sanitize
-        $this->startTime = htmlspecialchars(strip_tags($this->startTime));
-        $this->endTime = htmlspecialchars(strip_tags($this->endTime));
-        $this->employee_Id = htmlspecialchars(strip_tags($this->employee_Id));
-        $this->relationship[0]->relationship_Id = htmlspecialchars(strip_tags($this->relationship[0]->relationship_Id));
+        $this->startTime = parent::sanitize($this->startTime);
+        $this->endTime = parent::sanitize($this->endTime);
+        $this->employee_Id = parent::sanitize($this->employee_Id);
+        $this->relationship[0]->relationship_Id = parent::sanitize($this->relationship[0]->relationship_Id);
 
         // bind values
         $stmt->bindParam(":startTime", $this->startTime);
@@ -220,9 +143,9 @@ class Shift extends Method{
         $stmt = $this->conn->prepare($query);
 
         //sanitize
-        $this->startTime = htmlspecialchars(strip_tags($this->startTime));
-        $this->endTime = htmlspecialchars(strip_tags($this->endTime));
-        $relationship_Id = htmlspecialchars(strip_tags($relationship_Id));
+        $this->startTime = parent::sanitize($this->startTime);
+        $this->endTime = parent::sanitize($this->endTime);
+        $relationship_Id = parent::sanitize($relationship_Id);
 
         // bind values
         $stmt->bindParam(":startTime", $this->startTime);
@@ -246,7 +169,7 @@ class Shift extends Method{
         $stmt = $this->conn->prepare($query);
         
         // Sanitize
-        $this->id = htmlspecialchars(strip_tags($this->id));
+        $this->id = parent::sanitize($this->id);
         
         // Bind
         $stmt->bindParam(":shift_Id", $this->id);
@@ -273,5 +196,79 @@ class Shift extends Method{
             array_push($this->relationship, new Relationship("SubTask_Id", "shift_subtask", "subtask"));
             array_push($this->relationship, new Relationship("Assignment_Id", "shift_assignment", "assignment"));
         }
+    }
+
+    private function getSqlQuery($query){
+
+        switch($query){
+            case "getSingle": 
+
+                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
+                            FROM employee e, {$this->tableName} s 
+                            INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_id
+                            INNER JOIN {$this->relationship[0]->tableName}  st ON ss.{$this->relationship[0]->idColumnName} = st.Id
+                            WHERE e.Id = :employee_Id
+                            AND s.employee_Id = :employee_Id
+                            AND s.Id = :shiftId
+                            
+                            UNION
+
+                            SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
+                            FROM employee e, {$this->tableName} s 
+                            INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
+                            INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
+                            WHERE e.Id = :employee_Id
+                            AND s.employee_Id = :employee_Id
+                            AND s.Id = :shiftId;";
+                
+                return $string;
+            case "getAll":
+                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName 
+                           FROM employee e, {$this->tableName} s 
+                           INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id 
+                           INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id 
+                           WHERE e.Id = :employee_Id 
+                           AND s.employee_Id = :employee_Id 
+                           
+                           UNION 
+                           
+                           SELECT e.Name, s.StartTime, s.EndTime, a.Name
+                           FROM employee e, {$this->tableName} s 
+                           INNER JOIN {$this->relationship[1]->relTableName} sa ON s.Id = sa.Shift_Id 
+                           INNER JOIN {$this->relationship[1]->tableName} a ON sa.{$this->relationship[1]->idColumnName} = a.Id 
+                           WHERE e.Id = :employee_Id 
+                           AND s.employee_Id = :employee_Id;";
+
+                return $string;
+                break;
+            case "getAllDate":
+
+                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
+                           FROM employee e, {$this->tableName} s 
+                           INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id
+                           INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id
+                           WHERE e.Id = :employee_Id
+                           AND s.employee_Id = :employee_Id
+                           AND YEAR(s.StartTime) = :y
+                           AND MONTH(s.StartTime) = :m
+                           
+                           UNION   
+   
+                           SELECT e.Name, s.StartTime, s.EndTime, st.name
+                           FROM employee e, {$this->tableName} s 
+                           INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
+                           INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
+                           WHERE e.Id = :employee_Id
+                           AND s.employee_Id = :employee_Id
+                           AND YEAR(s.StartTime) = :y 
+                           AND MONTH(s.StartTime) = :m;";
+
+                return $string;
+                break;
+            default: 
+                return;
+        }
+
+
     }
 }

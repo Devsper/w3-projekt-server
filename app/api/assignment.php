@@ -30,18 +30,6 @@ switch($method){
 
         echo json_encode($result);
 
-        // $assignment->addRelationshipTables('employee');
-        // $assignment->relationships[0]->id = $_SESSION['employeeId'];
-
-        // $result = $assignment->getEmployeeAssignments();
-        
-        // if(count($result[0]) == 1){
-        //     $hasBeenIncluded = true;
-        //     include_once 'task.php';
-        // }else{
-        //     echo json_encode($result);
-        // } 
-
         break;
     case 'POST':
 

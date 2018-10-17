@@ -31,4 +31,9 @@ class Method{
     
         return $dataArr;
     }
+
+    protected function sanitize($input){
+
+        return htmlspecialchars(strip_tags($input));
+    }
 }

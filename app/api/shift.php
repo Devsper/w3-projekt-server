@@ -15,48 +15,34 @@ include_once '../objects/shift.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+$database = new Database();
+$db = $database->getConnection();
+$shift = new Shift($db);
+
 switch($method){
     case 'GET':
 
-        $database = new Database();
-        $db = $database->getConnection();
-        $shift = new Shift($db);
         $shift->addRelationshipTables("all");
 
-        $_GET['employeeId'] = $_SESSION['employeeId'];
+        if(!empty($_SESSION['employeeId'])){
 
-        if(!empty($_GET['employeeId']) && !empty($_GET['shiftId'])){
+            $shift->employee_Id = $_SESSION['employeeId'];
 
-            $shift->employee_Id = $_GET['employeeId'];
-            $shift->id = $_GET['shiftId'];
+            if(!empty($_GET['shiftId'])){
 
-            $shift->readSingle();
+                $shift->id = $_GET['shiftId'];
 
-        }elseif(!empty($_GET['employeeId']) && empty($_GET['date'])){
+            }elseif(!empty($_GET['date'])){
+    
+                $shift->date = $_GET['date'];
+            }
 
-            $shift->employee_Id = $_GET['employeeId'];
-
-            $shift->readAll();
-
-        }elseif(!empty($_GET['employeeId']) && !empty($_GET['date'])){
-
-            $shift->employee_Id = $_GET['employeeId'];
-            $shift->date = $_GET['date'];
-            $shift->readAllDate();
-        }
-        else{
-            echo '{ "message": "Could not retrieve shifts." }';
-            return;
+            $shift->read();
         }
 
         break;
     case 'POST':
         
-        $database = new Database();
-        $db = $database->getConnection();
-
-        $shift = new Shift($db);
-
         // get posted data
         $data = json_decode(file_get_contents("php://input"));
 
@@ -79,10 +65,6 @@ switch($method){
 
         break;
     case 'PUT':
-        $database = new Database();
-        $db = $database->getConnection();
-
-        $shift = new Shift($db);
         
         $data = json_decode(file_get_contents("php://input"));
 
@@ -104,11 +86,6 @@ switch($method){
 
         break;
     case 'DELETE':
-
-        $database = new Database();
-        $db = $database->getConnection();
-
-        $shift = new Shift($db);
         
         $data = json_decode(file_get_contents("php://input"));
         $shift->id = $data->id;
