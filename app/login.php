@@ -11,7 +11,6 @@ header("Content-Type: application/json; charset=UTF-8");
 require_once('config/database.php');
 require_once('objects/employee.php');
 
-
 if($_SERVER['REQUEST_METHOD'] == "POST" && !isset($_SESSION['employeeSession'])){
 
     if(!isset($_SESSION['employeeSession'])){

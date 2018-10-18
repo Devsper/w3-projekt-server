@@ -182,6 +182,23 @@ class Shift extends Method{
         return false;
     }
 
+    function getAllEmployeeShifts(){
+
+        $query = $this->getSqlQuery("getAllHours");
+
+        $stmt = $this->conn->prepare($query);
+        
+        // execute query
+        $stmt->execute();
+ 
+        $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "taskName", "shiftHours"),"");
+        $dataArr = parent::fetchRows($stmt, $shiftProp, false);
+
+        $dataArr = $this->groupShiftsByEmployee($dataArr);
+
+        return $dataArr;
+    }
+
     public function addRelationshipTables($relationship){
 
         if($relationship == "subTask"){
@@ -196,6 +213,50 @@ class Shift extends Method{
             array_push($this->relationship, new Relationship("SubTask_Id", "shift_subtask", "subtask"));
             array_push($this->relationship, new Relationship("Assignment_Id", "shift_assignment", "assignment"));
         }
+    }
+
+    private function groupShiftsByEmployee($shiftArr){
+        
+
+        $regroupArr = array();
+        $regroupArr[0] = array();
+        $index = 0;
+        $currentName = $shiftArr[0]['name'];
+        $previousName = $shiftArr[0]['name'];
+
+        foreach($shiftArr as $key => $value){
+            
+            $currentName = $shiftArr[$key]['name'];
+
+            if($currentName == $previousName){
+                array_push($regroupArr[$index], $shiftArr[$key]);
+            }else{
+                array_push($regroupArr, array());
+                $index++;
+                array_push($regroupArr[$index], $shiftArr[$key]);
+            }
+            
+            $previousName = $shiftArr[$key]['name'];
+        }
+
+        return $regroupArr;
+    }
+
+    function calculateTotalHours($shiftArr){
+
+        for($i = 0; $i< count($shiftArr); $i++){
+
+            $totalHours = 0;
+
+            for($j = 0; $j< count($shiftArr[$i]); $j++){
+
+                $totalHours += $shiftArr[$i][$j]['shiftHours'];
+            }
+
+            $shiftArr[$i]['TotalHours'] = $totalHours;
+        }
+
+        return $shiftArr;
     }
 
     private function getSqlQuery($query){
@@ -262,6 +323,28 @@ class Shift extends Method{
                            AND s.employee_Id = :employee_Id
                            AND YEAR(s.StartTime) = :y 
                            AND MONTH(s.StartTime) = :m;";
+
+                return $string;
+                break;
+            case "getAllHours":
+
+                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours' 
+                           FROM employee e, shift s 
+                           INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id 
+                           INNER JOIN subtask st ON ss.SubTask_Id = st.Id 
+                           WHERE e.Id = s.employee_Id
+                           AND YEAR(s.StartTime) = YEAR(CURRENT_DATE())
+                           AND MONTH(s.StartTime) = MONTH(CURRENT_DATE())
+                           
+                           UNION 
+                           
+                           SELECT e.Name, s.StartTime, s.EndTime, a.Name, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours'
+                           FROM employee e, shift s 
+                           INNER JOIN shift_assignment sa ON s.Id = sa.Shift_Id 
+                           INNER JOIN assignment a ON sa.Assignment_Id = a.Id 
+                           WHERE e.Id = s.employee_Id
+                           AND YEAR(s.StartTime) = YEAR(CURRENT_DATE())
+                           AND MONTH(s.StartTime) = MONTH(CURRENT_DATE())";
 
                 return $string;
                 break;
