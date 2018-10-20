@@ -13,13 +13,9 @@ require_once('objects/employee.php');
 
 if($_SERVER['REQUEST_METHOD'] == "POST" && !isset($_SESSION['employeeSession'])){
 
-    if(!isset($_SESSION['employeeSession'])){
-        $database = new Database();
-        $db = $database->getConnection();
-        $employee = new Employee($db);
-    }else{
-        session_destroy();
-    }
+    $database = new Database();
+    $db = $database->getConnection();
+    $employee = new Employee($db);
 
     $data = json_decode(file_get_contents("php://input"));
 
@@ -30,8 +26,14 @@ if($_SERVER['REQUEST_METHOD'] == "POST" && !isset($_SESSION['employeeSession']))
 
         if($employee->login()){
             
+            $startpage = $employee->checkStartPage();
+
             $res = array(
                 "message" => true,
+                "startpage" => $startpage,
+                "id" => $employee->id,
+                "username" => $employee->username,
+                "name" => $employee->name
             );
 
             echo json_encode($res);

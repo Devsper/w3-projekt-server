@@ -19,9 +19,18 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
 
         if(isset($_SESSION['employeeSession'])){
 
-            $result = $shift->getAllEmployeeShifts();
-            $result = $shift->calculateTotalHours($result);
+            if(!empty($_GET['date'])){
+    
+                $shift->date = $_GET['date'];
 
-            echo json_encode($result);
+                $result = $shift->getAllEmployeeShifts();
+                $result = $shift->calculateTotalHours($result);
+
+                echo json_encode($result);
+            }else{
+                echo '{"message": "No date present"}';
+            }
+        }else{
+            echo '{"message": "error"}';
         }
 }

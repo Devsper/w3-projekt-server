@@ -188,10 +188,19 @@ class Shift extends Method{
 
         $stmt = $this->conn->prepare($query);
         
+        $this->date = parent::sanitize($this->date);
+            
+        $dateArr = explode("-", $this->date);
+        $year = $dateArr[0];
+        $month = $dateArr[1];
+
+        $stmt->bindParam(":y", $year);
+        $stmt->bindParam(":m", $month);
+
         // execute query
         $stmt->execute();
- 
-        $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "taskName", "shiftHours"),"");
+
+        $shiftProp = array_fill_keys(array("name", "username", "startTime", "endTime", "taskName", "shiftHours"),"");
         $dataArr = parent::fetchRows($stmt, $shiftProp, false);
 
         $dataArr = $this->groupShiftsByEmployee($dataArr);
@@ -217,26 +226,32 @@ class Shift extends Method{
 
     private function groupShiftsByEmployee($shiftArr){
         
-
+        // Creates container array
         $regroupArr = array();
+        // Creates inner array
         $regroupArr[0] = array();
         $index = 0;
-        $currentName = $shiftArr[0]['name'];
-        $previousName = $shiftArr[0]['name'];
+        // Declare startvalues
+        $currentUsername = $shiftArr[0]['username'];
+        $previousUsername = $shiftArr[0]['username'];
 
         foreach($shiftArr as $key => $value){
             
-            $currentName = $shiftArr[$key]['name'];
+            // Username of the current iteration
+            $currentUsername = $shiftArr[$key]['username'];
 
-            if($currentName == $previousName){
+            // Add values to the current array
+            if($currentUsername == $previousUsername){
                 array_push($regroupArr[$index], $shiftArr[$key]);
             }else{
+                // If the username has changed push a new array and push values into that one istead
                 array_push($regroupArr, array());
                 $index++;
                 array_push($regroupArr[$index], $shiftArr[$key]);
             }
             
-            $previousName = $shiftArr[$key]['name'];
+            // Updates username for previous run
+            $previousUsername = $shiftArr[$key]['username'];
         }
 
         return $regroupArr;
@@ -322,29 +337,30 @@ class Shift extends Method{
                            WHERE e.Id = :employee_Id
                            AND s.employee_Id = :employee_Id
                            AND YEAR(s.StartTime) = :y 
-                           AND MONTH(s.StartTime) = :m;";
+                           AND MONTH(s.StartTime) = :m";
 
                 return $string;
                 break;
             case "getAllHours":
 
-                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours' 
+                $string = "SELECT e.Name, e.Username, s.StartTime, s.EndTime, st.name as TaskName, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours' 
                            FROM employee e, shift s 
                            INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id 
                            INNER JOIN subtask st ON ss.SubTask_Id = st.Id 
                            WHERE e.Id = s.employee_Id
-                           AND YEAR(s.StartTime) = YEAR(CURRENT_DATE())
-                           AND MONTH(s.StartTime) = MONTH(CURRENT_DATE())
+                           AND YEAR(s.StartTime) = :y
+                           AND MONTH(s.StartTime) = :m
                            
                            UNION 
                            
-                           SELECT e.Name, s.StartTime, s.EndTime, a.Name, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours'
+                           SELECT e.Name, e.Username, s.StartTime, s.EndTime, a.Name, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours'
                            FROM employee e, shift s 
                            INNER JOIN shift_assignment sa ON s.Id = sa.Shift_Id 
                            INNER JOIN assignment a ON sa.Assignment_Id = a.Id 
                            WHERE e.Id = s.employee_Id
-                           AND YEAR(s.StartTime) = YEAR(CURRENT_DATE())
-                           AND MONTH(s.StartTime) = MONTH(CURRENT_DATE())";
+                           AND YEAR(s.StartTime) = :y
+                           AND MONTH(s.StartTime) = :m
+                           ORDER BY Username";
 
                 return $string;
                 break;

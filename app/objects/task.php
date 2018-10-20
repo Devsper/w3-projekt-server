@@ -11,7 +11,6 @@ class Task extends Method{
     public $id;
     public $name;
     public $assignment_Id;
-    public $relationships = array();
 
     // Constructs a database connection
     public function __construct($db){
@@ -114,14 +113,13 @@ class Task extends Method{
 
     function getEmployeeTasks(){
         
-        $query = "SELECT task.Name as 'Task', subtask.Name as 'Subtask'
+        $query = "SELECT task.Name as 'Task', subtask.Name as 'Subtask', task.Id as 'TaskId', subtask.Id as 'SubtaskId' 
                   FROM employee
                   INNER JOIN employee_task ON employee.Id = employee_task.Employee_Id
                   INNER JOIN task ON task.Id = employee_task.Task_Id
                   INNER JOIN subtask ON subtask.Task_Id = task.Id
                   WHERE employee.Id = :employee_Id";
         
-
         // prepare query statement
         $stmt = $this->conn->prepare($query);
 
@@ -133,7 +131,7 @@ class Task extends Method{
         // execute query
         $stmt->execute();
         
-        $shiftProp = array_fill_keys(array("task", "subtask"),"");
+        $shiftProp = array_fill_keys(array("task", "subtask", ),"");
         $dataArr = parent::fetchRows($stmt, $shiftProp);
 
         return $dataArr;

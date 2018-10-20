@@ -1,7 +1,6 @@
 <?php 
 
 require_once('method.php');
-require_once('relationship.php');
 
 class Assignment extends Method{
     
@@ -11,7 +10,6 @@ class Assignment extends Method{
     // Properties of class
     public $id;
     public $name;
-    public $relationships = array();
 
     // Constructs a database connection
     public function __construct($db){
@@ -24,10 +22,15 @@ class Assignment extends Method{
                   FROM {$this->tableName} a 
                   INNER JOIN employee_assignment ON a.id = employee_assignment.Assignment_Id 
                   INNER JOIN employee ON employee.Id = employee_assignment.Employee_Id 
-                  WHERE employee.Id = {$this->relationships[0]->id}";
+                  WHERE employee.Id = :employeeId";
 
         // prepare query statement
         $stmt = $this->conn->prepare($query);
+
+        $employeeId = parent::sanitize($_SESSION['employeeId']);
+
+        // bind values
+        $stmt->bindParam(":employeeId", $employeeId);
     
         // execute query
         $stmt->execute();
@@ -121,12 +124,5 @@ class Assignment extends Method{
             return true;
         }
         return false;
-    }
-
-    public function addRelationshipTables($relationship){
-
-        if($relationship == "employee"){
-            array_push($this->relationships, new Relationship("Employee_Id", "employee_assignment", "employee"));
-        }
     }
 }
