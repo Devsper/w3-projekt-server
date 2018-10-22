@@ -10,6 +10,7 @@ class Assignment extends Method{
     // Properties of class
     public $id;
     public $name;
+    public $employee_Id;
 
     // Constructs a database connection
     public function __construct($db){
@@ -27,10 +28,9 @@ class Assignment extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
 
-        $employeeId = parent::sanitize($_SESSION['employeeId']);
+        $this->employee_Id =  parent::sanitize($this->employee_Id);
 
-        // bind values
-        $stmt->bindParam(":employeeId", $employeeId);
+        $stmt->bindParam(":employeeId", $this->employee_Id);
     
         // execute query
         $stmt->execute();

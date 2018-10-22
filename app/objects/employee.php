@@ -33,18 +33,16 @@ class Employee extends Method{
         // execute query
         $stmt->execute();
 
-        $employeeProp = array_fill_keys(array("id", "username", "name", "password"),"");
+        $employeeProp = array_fill_keys(array("id", "username", "name", "password", "isAdmin"),"");
         $dataArr = parent::fetchRows($stmt, $employeeProp, false);
 
         if(count($dataArr) > 0){
 
             if($this->password == $dataArr[0]['password']){
                 
-                $_SESSION['employeeSession'] = true;
-                $_SESSION['employeeId'] = $dataArr[0]['id'];
-
                 $this->id = $dataArr[0]['id'];
                 $this->name = $dataArr[0]['name'];
+                $this->isAdmin = $dataArr[0]['isAdmin'];
 
                 return true;
             }else{
@@ -63,9 +61,9 @@ class Employee extends Method{
 
         $stmt = $this->conn->prepare($query);
 
-        $_SESSION['employeeId'] = parent::sanitize($_SESSION['employeeId']);
+        $this->id = parent::sanitize($this->id);
         
-        $stmt->bindParam(":employee_id", $_SESSION['employeeId']);
+        $stmt->bindParam(":employee_id", $this->id);
         
         // execute query
         $stmt->execute();

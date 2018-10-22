@@ -11,6 +11,7 @@ class Task extends Method{
     public $id;
     public $name;
     public $assignment_Id;
+    public $employee_Id;
 
     // Constructs a database connection
     public function __construct($db){
@@ -123,15 +124,15 @@ class Task extends Method{
         // prepare query statement
         $stmt = $this->conn->prepare($query);
 
-        $employeeId = parent::sanitize($_SESSION['employeeId']);
+        $this->employee_Id = parent::sanitize($this->employee_Id);
 
         // bind values
-        $stmt->bindParam(":employee_Id", $employeeId);
+        $stmt->bindParam(":employee_Id", $this->employee_Id);
     
         // execute query
         $stmt->execute();
         
-        $shiftProp = array_fill_keys(array("task", "subtask", ),"");
+        $shiftProp = array_fill_keys(array("task", "taskId", "subtask", "subtaskId" ),"");
         $dataArr = parent::fetchRows($stmt, $shiftProp);
 
         return $dataArr;

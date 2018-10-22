@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 // required headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");
@@ -24,9 +22,9 @@ switch($method){
 
         $shift->addRelationshipTables("all");
 
-        if(!empty($_SESSION['employeeId'])){
+        if(!empty($_GET['employeeId'])){
 
-            $shift->employee_Id = $_SESSION['employeeId'];
+            $shift->employee_Id = $_GET['employeeId'];
 
             if(!empty($_GET['shiftId'])){
 

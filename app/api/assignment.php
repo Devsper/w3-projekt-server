@@ -1,6 +1,5 @@
 <?php
 
-session_start();
 // required headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");

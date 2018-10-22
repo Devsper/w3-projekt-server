@@ -1,7 +1,5 @@
 <?php 
 
-session_start();
-
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Max-Age: 3600");
@@ -17,20 +15,28 @@ if($_SERVER['REQUEST_METHOD'] == "GET"){
         $db = $database->getConnection();
         $shift = new Shift($db);
 
-        if(isset($_SESSION['employeeSession'])){
-
-            if(!empty($_GET['date'])){
+        try{
+            $token = JWT::decode($_GET['token'], 'secret_server_key');
+        }catch(Exception $e){
     
-                $shift->date = $_GET['date'];
-
-                $result = $shift->getAllEmployeeShifts();
-                $result = $shift->calculateTotalHours($result);
-
-                echo json_encode($result);
-            }else{
-                echo '{"message": "No date present"}';
-            }
-        }else{
-            echo '{"message": "error"}';
+            $res = array(
+                "Exception" => $e->getMessage()
+            );
+    
+            echo json_encode($res);
+            return;
         }
+        
+        if(!empty($_GET['date'])){
+
+            $shift->date = $_GET['date'];
+
+            $result = $shift->getAllEmployeeShifts();
+            $result = $shift->calculateTotalHours($result);
+
+            echo json_encode($result);
+        }else{
+            echo '{"message": "No date present"}';
+        }
+
 }
