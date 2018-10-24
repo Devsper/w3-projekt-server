@@ -20,6 +20,25 @@ class Employee extends Method{
         $this->conn = $db;
     }
 
+    function read(){
+
+        $query = "SELECT * FROM employee WHERE Id =:id LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+
+        $this->username = parent::sanitize($this->id);
+        
+        $stmt->bindParam(":id", $this->id);
+        
+        // execute query
+        $stmt->execute();
+
+        $employeeProp = array_fill_keys(array("id", "username", "name", "isAdmin"),"");
+        $dataArr = parent::fetchRows($stmt, $employeeProp, false);
+
+        return $dataArr;
+    }
+
     function login(){
 
         $query = "SELECT * FROM employee WHERE Username =:username LIMIT 1";

@@ -10,51 +10,42 @@ require_once('config/database.php');
 require_once('objects/assignment.php');
 require_once('objects/task.php');
 require_once('helpers/jwt_helper.php');
+require_once('objects/authentication.php');
 
 if($_SERVER['REQUEST_METHOD'] == "POST"){
 
     $data = json_decode(file_get_contents("php://input"));
     
-    try{
-        $token = JWT::decode($data->token, 'secret_server_key');
-    }catch(Exception $e){
+    $auth = new Authentication();
+    $token = $auth->authenticate($data->token);
 
-        $res = array(
-            "Exception" => $e->getMessage()
-        );
+    if(!$token){ return ;} 
 
-        echo json_encode($res);
-        return;
-    }
+    $database = new Database();
+    $db = $database->getConnection();
+    
+    $dataToGet = $data->getData;
 
-    if($token) {
+    switch ($dataToGet) {
+        case 'employeeAssignments':
+            
+            $assignment = new Assignment($db);
+            $assignment->employee_Id = $data->employee_Id;
 
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        $dataToGet = $data->getData;
+            $result = $assignment->getEmployeeAssignments();
 
-        switch ($dataToGet) {
-            case 'employeeAssignments':
-                
-                $assignment = new Assignment($db);
-                $assignment->employee_Id = $data->employee_Id;
+            echo json_encode($result);
+            break;
+        case 'employeeTasks':
 
-                $result = $assignment->getEmployeeAssignments();
+            $task = new Task($db);
+            $task->employee_Id = $data->employee_Id;
+            $result = $task->getEmployeeTasks();
 
-                echo json_encode($result);
-                break;
-            case 'employeeTasks':
-
-                $task = new Task($db);
-                $task->employee_Id = $data->employee_Id;
-                $result = $task->getEmployeeTasks();
-
-                echo json_encode($result);
-                break;
-            default:
-                # code...
-                break;
-        }
+            echo json_encode($result);
+            break;
+        default:
+            # code...
+            break;
     }
 }

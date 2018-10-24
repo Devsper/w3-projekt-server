@@ -51,6 +51,7 @@ class Subtask extends Method{
     
         return $dataArr;
     }
+    
     function create(){
 
         $query = "INSERT INTO {$this->tableName} (Name, Task_Id) VALUES (:name, :task_Id)";

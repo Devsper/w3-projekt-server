@@ -7,15 +7,27 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
-include_once '../config/database.php';
-include_once '../objects/assignment.php';
+require_once('../config/database.php');
+require_once('../objects/assignment.php');
+require_once('../helpers/jwt_helper.php');
+require_once('../objects/authentication.php');
 
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+$auth = new Authentication();
+
+if($metod == 'GET'){
+    $token = $auth->authenticate($_GET['token']);
+}else{
+    $data = json_decode(file_get_contents("php://input"));
+    $token = $auth->authenticate($data->token);
+}
+
+if(!$token){ return ;} 
+
 $database = new Database();
 $db = $database->getConnection();
-
 $assignment = new Assignment($db);
 
 switch($method){
@@ -32,8 +44,6 @@ switch($method){
         break;
     case 'POST':
 
-        $data = json_decode(file_get_contents("php://input"));
-
         $assignment->name = $data->name;
 
         if($assignment->create()){
@@ -44,8 +54,6 @@ switch($method){
         }
         break;
     case 'PUT':
-
-        $data = json_decode(file_get_contents("php://input"));
 
         $assignment->name = $data->name;
         $assignment->id = $data->id;
@@ -58,8 +66,6 @@ switch($method){
         }
         break;
     case 'DELETE':
-
-        $data = json_decode(file_get_contents("php://input"));
 
         $assignment->id = $data->id;
 

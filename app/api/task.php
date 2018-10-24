@@ -5,11 +5,23 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT');
 header("Content-Type: application/json; charset=UTF-8");
 
-include_once '../config/database.php';
-include_once '../objects/task.php';
-
+require_once('../config/database.php');
+require_once('../objects/task.php');
+require_once('../helpers/jwt_helper.php');
+require_once('../objects/authentication.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+$auth = new Authentication();
+
+if($metod == 'GET'){
+    $token = $auth->authenticate($_GET['token']);
+}else{
+    $data = json_decode(file_get_contents("php://input"));
+    $token = $auth->authenticate($data->token);
+}
+
+if(!$token){ return ;} 
 
 $database = new Database();
 $db = $database->getConnection();

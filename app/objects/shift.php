@@ -105,7 +105,7 @@ class Shift extends Method{
 
     function update(){
         
-        if($this->shiftType == "subTask"){
+        if($this->shiftType == "subtask"){
             $idName = $this->relationship[0]->idColumnName;
             $relationshipTable = $this->relationship[0]->relTableName;
             $relationship_Id = $this->relationship[0]->id;
@@ -210,8 +210,8 @@ class Shift extends Method{
 
     public function addRelationshipTables($relationship){
 
-        if($relationship == "subTask"){
-            array_push($this->relationship, new Relationship("SubTask_Id", "shift_subtask", "subtask"));
+        if($relationship == "subtask"){
+            array_push($this->relationship, new Relationship("Subtask_Id", "shift_subtask", "subtask"));
         }
 
         if($relationship == "assignment"){
@@ -219,7 +219,7 @@ class Shift extends Method{
         }
 
         if($relationship == "all"){
-            array_push($this->relationship, new Relationship("SubTask_Id", "shift_subtask", "subtask"));
+            array_push($this->relationship, new Relationship("Subtask_Id", "shift_subtask", "subtask"));
             array_push($this->relationship, new Relationship("Assignment_Id", "shift_assignment", "assignment"));
         }
     }
@@ -346,7 +346,7 @@ class Shift extends Method{
                 $string = "SELECT e.Name, e.Username, s.StartTime, s.EndTime, st.name as TaskName, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours' 
                            FROM employee e, shift s 
                            INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id 
-                           INNER JOIN subtask st ON ss.SubTask_Id = st.Id 
+                           INNER JOIN subtask st ON ss.Subtask_Id = st.Id 
                            WHERE e.Id = s.employee_Id
                            AND YEAR(s.StartTime) = :y
                            AND MONTH(s.StartTime) = :m

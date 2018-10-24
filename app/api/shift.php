@@ -7,11 +7,24 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
-include_once '../config/database.php';
-include_once '../objects/shift.php';
+require_once('../config/database.php');
+require_once('../objects/shift.php');
+require_once('../helpers/jwt_helper.php');
+require_once('../objects/authentication.php');
 
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+$auth = new Authentication();
+
+if($metod == 'GET'){
+    $token = $auth->authenticate($_GET['token']);
+}else{
+    $data = json_decode(file_get_contents("php://input"));
+    $token = $auth->authenticate($data->token);
+}
+
+if(!$token){ return ;} 
 
 $database = new Database();
 $db = $database->getConnection();
@@ -52,7 +65,7 @@ switch($method){
         $shift->addRelationshipTables($shift->shiftType);
 
         // Adds relationship ID to relationship object
-        $shift->relationship[0]->id = $data->relationship->id;
+        $shift->relationship[0]->id = $data->relationship_Id;
 
         if($shift->create()){
             echo '{ "message": "Shift was added." }';

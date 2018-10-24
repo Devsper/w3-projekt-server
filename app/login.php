@@ -9,7 +9,7 @@ header("Content-Type: application/json; charset=UTF-8");
 require_once('config/database.php');
 require_once('objects/employee.php');
 require_once('helpers/jwt_helper.php');
-
+require_once('objects/authentication.php');
 
 if($_SERVER['REQUEST_METHOD'] == "POST"){
 
@@ -28,9 +28,8 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
             
             $startpage = $employee->checkStartPage();
 
-            $token = array();
-            $token['id'] = $employee->id;
-            $authToken = JWT::encode($token, 'secret_server_key');
+            $auth = new Authentication();
+            $authToken = $auth->createToken($employee->id);
 
             $res = array(
                 "message" => true,
