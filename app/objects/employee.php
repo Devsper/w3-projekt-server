@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once('method.php');
 
@@ -19,46 +19,68 @@ class Employee extends Method{
     public function __construct($db){
         $this->conn = $db;
     }
-
+    
+    /**
+     * Fetches single employee record from database
+     * 
+     * @return array $dataArr Fetched record from database
+     */
     function read(){
-
+				
+        // SQL query to fetch employee by id
         $query = "SELECT * FROM employee WHERE Id =:id LIMIT 1";
-
+				
+        // Prepares statement
         $stmt = $this->conn->prepare($query);
 
+        // Santize and bind property
         $this->username = parent::sanitize($this->id);
-        
         $stmt->bindParam(":id", $this->id);
         
-        // execute query
+        // Execute query
         $stmt->execute();
-
+        
+         // Creates associative array with keys to contain values from fetched from database
         $employeeProp = array_fill_keys(array("id", "username", "name", "isAdmin"),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $employeeProp, false);
-
+				
+        // Return associative array
         return $dataArr;
     }
-
+    
+    /**
+     * Login employee to application
+     * 
+     * @return boolean Result of login attempt
+     */
     function login(){
 
+        // SQL query to fetch user from database
         $query = "SELECT * FROM employee WHERE Username =:username LIMIT 1";
 
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
+        // Santize and bind property
         $this->username = parent::sanitize($this->username);
-        
         $stmt->bindParam(":username", $this->username);
         
-        // execute query
+        // Execute query
         $stmt->execute();
 
+        // Creates associative array with keys to contain values from fetched from database
         $employeeProp = array_fill_keys(array("id", "username", "name", "password", "isAdmin"),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $employeeProp, false);
 
+        // If user was found
         if(count($dataArr) > 0){
 
+            // Compare passwords
             if($this->password == $dataArr[0]['password']){
                 
+                // Add values to send back to user
                 $this->id = $dataArr[0]['id'];
                 $this->name = $dataArr[0]['name'];
                 $this->isAdmin = $dataArr[0]['isAdmin'];
@@ -72,24 +94,34 @@ class Employee extends Method{
         return false;
     }
 
-    function checkStartPage(){
+    /**
+     * Determine which startpage to show to employee
+     * 
+     * @return string which startpage to show employee
+     */
+    function determineStartPage(){
 
+        // SQL query to count how many assignments an employee has
         $query = "SELECT COUNT(ea.Employee_Id) as 'Rows'
                   FROM employee_assignment ea
                   WHERE ea.Employee_Id = :employee_id;";
 
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
+        // Santize and bind property
         $this->id = parent::sanitize($this->id);
-        
         $stmt->bindParam(":employee_id", $this->id);
         
-        // execute query
+        // Execute query
         $stmt->execute();
 
+         // Creates associative array with keys to contain values from fetched from database
         $employeeProp = array_fill_keys(array("rows"),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $employeeProp, false);
 
+        // If there are more than one row assignment should show otherwise tasks
         if($dataArr[0]["rows"] > 1){
             
             return 'assignments';

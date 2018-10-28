@@ -12,74 +12,90 @@ require_once('../objects/authentication.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Instantiate authentication object
 $auth = new Authentication();
 
-if($metod == 'GET'){
+// Authenticate token from GET and other HTTP methods
+if($method == 'GET'){
     $token = $auth->authenticate($_GET['token']);
 }else{
     $data = json_decode(file_get_contents("php://input"));
     $token = $auth->authenticate($data->token);
 }
 
+// Cancel request if authentication failed
 if(!$token){ return ;} 
 
+// Create database connection
 $database = new Database();
 $db = $database->getConnection();
 
+// Instantiate task object
 $task = new Task($db);
 
+// Determine HTTP method
 switch($method){
     case 'GET':
-
+				
+		// check if id is present to fetch a single row
         if(!empty($_GET['id'])){
             $task->id = $_GET['id'];
         }
-
+			
+	    // Assign value to object property
         $task->assignment_Id = $_GET['assignment_Id'];
-
+			
+		// Fetch from database
         $result = $task->read();
-
+				
+        // Return JSON result to client
         echo json_encode($result);
         break;
     case 'POST':
-
-        $data = json_decode(file_get_contents("php://input"));
-
+				
+		// Assign values to object properties
         $task->name = $data->name;
         $task->assignment_Id = $data->assignment_Id;
-
+				
+		// Try to add task to database, return message
         if($task->create()){
-            echo '{ "message": "Task was added." }';
+            $res = array("status" => "success", "message" => "Task was added.");
+            echo json_encode($res);
         }
         else{
-            echo '{ "message": "Unable to add task." }';
+            $res = array("status" => "failure", "message" => "Unable to add task.");
+            echo json_encode($res);
         }
         break;
     case 'PUT':
-
-        $data = json_decode(file_get_contents("php://input"));
-
+			 
+		// Assign values to object properties
         $task->name = $data->name;
         $task->id = $data->id;
-
+			
+		// Try to update task in database, return message
         if($task->update()){
-            echo '{ "message": "Task was updated." }';
+            $res = array("status" => "success", "message" => "Task was updated.");
+            echo json_encode($res);
         }
         else{
-            echo '{ "message": "Unable to update task." }';
+            $res = array("status" => "failure", "message" => "Unable to update task.");
+            echo json_encode($res);
         }
         break;
     case 'DELETE':
-
-        $data = json_decode(file_get_contents("php://input"));
-
+			 
+		// Assign values to object properties
         $task->id = $data->id;
-
+				
+		// Try to delete task in database, return message
         if($task->delete()){
-            echo '{ "message": "Task was deleted." }';
+            $res = array("status" => "success", "message" => "Task was deleted.");
+            echo json_encode($res);
         }
         else{
-            echo '{ "message": "Unable to delete task." }';
+            $res = array("status" => "failure", "message" => "Unable to delete task.");
+            echo json_encode($res);
         }
         break;
     default:

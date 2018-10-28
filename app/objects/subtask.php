@@ -18,96 +18,125 @@ class Subtask extends Method{
         $this->conn = $db;
     }
 
+    /**
+     * Fetches subtasks from database, single and multiple record
+     * 
+     * @return array $dataArr Fetched rows from database as associative array.
+     */
     function read(){
 
+        // If id property is present fetch single record
         if($this->id){
 
-            $query = "SELECT st.Id, st.StName FROM subtask st WHERE st.Task_Id = :task_id AND st.id = :id";
+            // SQL query to select single subtask
+            $query = "SELECT st.Id, st.Name FROM {$this->tableName} st WHERE st.Id = :id";
 
-            // prepare query statement
+            // Prepare query statement
             $stmt = $this->conn->prepare($query);
         
-            $this->task_id = parent::sanitize($this->task_Id);
+            // Sanitize property
             $this->id = parent::sanitize($this->id);
-            // bind values
-            $stmt->bindParam(":task_id", $this->task_id);
+      
+            // Bind property to statement
             $stmt->bindParam(":id", $this->id);
         }else{
-            $query = "SELECT st.Id, st.StName FROM {$this->tableName} st WHERE Task_Id = :task_id";
+            // SQL query to select subtask from specific task relationship
+            $query = "SELECT st.Id, st.Name FROM {$this->tableName} st WHERE Task_Id = :task_id";
 
-            // prepare query statement
+            // Prepare query statement
             $stmt = $this->conn->prepare($query);
 
+            // Santize and bind property
             $this->task_Id = parent::sanitize($this->task_Id);
-            // bind values
             $stmt->bindParam(":task_id", $this->task_Id);
         }
 
-        // execute query
+        // Execute query
         $stmt->execute();
 
-        $subtaskProp = array_fill_keys(array("StName", "id"),"");
+        // Creates associative array with keys to contain values from fetched from database
+        $subtaskProp = array_fill_keys(array("name", "id"),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $subtaskProp);
     
         return $dataArr;
     }
     
+    /**
+     * Creates a record of subtask in database
+     * 
+     * @return boolean Creation status
+     */
     function create(){
 
+        // SQL query to create an subtask
         $query = "INSERT INTO {$this->tableName} (Name, Task_Id) VALUES (:name, :task_Id)";
         
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
-        
+
+        // Santize and bind properties
         $this->task_Id = parent::sanitize($this->task_Id);
         $this->name = parent::sanitize($this->name);
-
-        // bind values
         $stmt->bindParam(':name', $this->name);
         $stmt->bindParam(':task_Id', $this->task_Id);
 
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
         return false;
     }
+
+    /**
+     * Updates subtask record in database
+     * 
+     * @return boolean Update status
+     */
     function update(){
 
+        // SQL query to update a given record      
         $query = "UPDATE {$this->tableName} SET Name =:name WHERE id=:id";
         
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
-    
+        
+        // Santize and bind properties
         $this->id = parent::sanitize($this->id);
         $this->name = parent::sanitize($this->name);
-
-        // bind values
         $stmt->bindParam(":id", $this->id);
         $stmt->bindParam(":name", $this->name);
 
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
         return false;
     }
+
+    /**
+     * Deletes assignment record in database
+     * 
+     * @return boolean Delete status
+     */   
     function delete(){
         
+        // SQL query to delete given record
         $query = "DELETE FROM {$this->tableName} WHERE id=:id";
        
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
     
+        // Santize and bind property
         $this->id = parent::sanitize($this->id);
-
-        // bind values
         $stmt->bindParam(":id", $this->id);
         
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
         return false;
     }
+
+    
 }

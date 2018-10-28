@@ -14,28 +14,49 @@ require_once('../objects/authentication.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Instantiate authentication object
+$auth = new Authentication();
+
+// Authenticate token from both GET and other HTTP methods
+if($method == 'GET'){
+    $token = $auth->authenticate($_GET['token']);
+}else{
+    $data = json_decode(file_get_contents("php://input"));
+    $token = $auth->authenticate($data->token);
+}
+
+// Cancel request if authentication failed
+if(!$token){ return ;} 
+
+// Create database connection
 $database = new Database();
 $db = $database->getConnection();
 
-$auth = new Authentication();
-$token = $auth->authenticate($_GET['token']);
-
-if(!$token){ return; }
-
+// Instantiate employee object
 $employee = new Employee($db);
 
+// Determine HTTP method
 switch($method){
     case 'GET':
-
+				
+		// Check if employee id is present
         if(!empty($_GET['id'])){
-
+						
+			// Assign value to object property
             $employee->id = $_GET['id'];
             
+            // Fetch employee from database
             $result = $employee->read();
+            // Determine startpage for employee
+            $startpage = $employee->checkStartPage();
+            $result['startpage'] = $startpage;
+						
+			// Return result as JSON
             echo json_encode($result);
         }
 
         break;
+    // HTTP methods to be used in the future
     case 'POST':
         break;
     case 'PUT':

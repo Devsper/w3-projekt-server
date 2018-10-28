@@ -25,53 +25,109 @@ class Shift extends Method{
         $this->conn = $db;
     }
 
+    /**
+     * Fetches shifts from database, single and multiple record
+     * 
+     * @return array $dataArr Fetched rows from database as associative array.
+     */
     function read(){
 
+        // If id property is present fetch single record
         if($this->id){
-             // Get a single shift for a user
-            $query = $this->getSqlQuery("getSingle");
+
+            // SQL query for a single shift, 
+            // relationship is unknown so fetch from both relationship tables with UNION
+            $query = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_id
+                      INNER JOIN {$this->relationship[0]->tableName}  st ON ss.{$this->relationship[0]->idColumnName} = st.Id
+                      WHERE e.Id = :employee_Id
+                      AND s.employee_Id = :employee_Id
+                      AND s.Id = :shiftId
+                      
+                      UNIO  
+                      SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
+                      INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
+                      WHERE e.Id = :employee_Id
+                      AND s.employee_Id = :employee_Id
+                      AND s.Id = :shiftId;";
+
         }elseif($this->date){
-            $query = $this->getSqlQuery("getAllDate");
-        }else{
-            $query = $this->getSqlQuery("getAll");
+
+            // SQL query to search shift by date
+            // fetch shift from both assignment and subtasks so UNION table is needed
+            $query = "SELECT e.Name, s.Id, s.StartTime, s.EndTime, st.name as TaskName
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id
+                      INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id
+                      WHERE e.Id = :employee_Id
+                      AND s.employee_Id = :employee_Id
+                      AND YEAR(s.StartTime) = :y
+                      AND MONTH(s.StartTime) = :m
+                      
+                      UNION   
+              
+                      SELECT e.Name, s.Id, s.StartTime, s.EndTime, st.name
+                      FROM employee e, {$this->tableName} s 
+                      INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
+                      INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
+                      WHERE e.Id = :employee_Id
+                      AND s.employee_Id = :employee_Id
+                      AND YEAR(s.StartTime) = :y 
+                      AND MONTH(s.StartTime) = :m";
         }
 
-         // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
         if($this->id){
-           
+            
+            // Santize and bind property
             $this->id = parent::sanitize($this->id);
             $stmt->bindParam(":shiftId", $this->id);
         }
          
         if($this->date){
             
+            // Sanitizes property
             $this->date = parent::sanitize($this->date);
             
+            // Format date to be bound to statement
             $dateArr = explode("-", $this->date);
-
             $year = $dateArr[0];
             $month = $dateArr[1];
 
+            // Bind properties to statement
             $stmt->bindParam(":y", $year);
             $stmt->bindParam(":m", $month);
         }
 
+        // Santize and bind property
         $this->employee_Id = parent::sanitize($this->employee_Id);
         $stmt->bindParam(":employee_Id", $this->employee_Id);
 
-         // execute query
+         // Execute query
          $stmt->execute();
          
-         $shiftProp = array_fill_keys(array("name", "startTime", "endTime", "taskName"),"");
+         // Creates associative array with keys to contain values from fetched from database
+         $shiftProp = array_fill_keys(array("id", "name", "startTime", "endTime", "taskName"),"");
+         // Populate array with values from database
          $dataArr = parent::fetchRows($stmt, $shiftProp);
 
-         echo json_encode($dataArr);
+         return $dataArr;
     }
 
+    /**
+     * Creates a record of assignment in database
+     * 
+     * @return boolean Creation status
+     */
     function create(){
 
+        // SQL query to create an shift
+        // Adds to both shift table and relationship table with a transaction
         $query = "START TRANSACTION;
                   INSERT INTO {$this->tableName} (StartTime, EndTime, Employee_Id)
                   VALUES (:startTime, :endTime, :employee_Id);
@@ -81,21 +137,20 @@ class Shift extends Method{
                   VALUES (@last_inserted_id, :relation_Id);
                   COMMIT";
 
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
-        //sanitize
+        // Santize and bind properties
         $this->startTime = parent::sanitize($this->startTime);
         $this->endTime = parent::sanitize($this->endTime);
         $this->employee_Id = parent::sanitize($this->employee_Id);
-        $this->relationship[0]->relationship_Id = parent::sanitize($this->relationship[0]->relationship_Id);
-
-        // bind values
+        $this->relationship[0]->id = parent::sanitize($this->relationship[0]->id);
         $stmt->bindParam(":startTime", $this->startTime);
         $stmt->bindParam(":endTime", $this->endTime);
         $stmt->bindParam(":employee_Id", $this->employee_Id);
-        $stmt->bindParam(":relation_Id", $this->relationship[0]->relationship_Id);
-    
-        // execute query
+        $stmt->bindParam(":relation_Id", $this->relationship[0]->id);
+
+        // Execute query
         if($stmt->execute()){
             return true;
         }
@@ -103,9 +158,16 @@ class Shift extends Method{
         return false;
     }
 
+    /**
+     * Updates shift record in database
+     * 
+     * @return boolean Update status
+     */
     function update(){
         
+        // Checks which type of shift is being updated
         if($this->shiftType == "subtask"){
+            // Adds values for relationship table subtask to be used in SQL-statement
             $idName = $this->relationship[0]->idColumnName;
             $relationshipTable = $this->relationship[0]->relTableName;
             $relationship_Id = $this->relationship[0]->id;
@@ -113,14 +175,18 @@ class Shift extends Method{
         }
 
         if($this->shiftType == "assignment"){
+            // Adds values for relationship table assignment to be used in SQL-statement
             $idName = $this->relationship[1]->idColumnName;
             $relationshipTable = $this->relationship[1]->relTableName;
             $relationship_Id = $this->relationship[1]->id;
             $deleteTable = $this->relationship[0]->relTableName;
         }
 
+        // Check if shift type has changed from previous state
+        // Different SQL statements are needed depending on value 
         if($this->shiftTypeChanged == true){
 
+            // If type has changed remove old relationship and add new and update shift
             $query = "START TRANSACTION;
                       UPDATE {$this->tableName} s
                       SET s.StartTime = :startTime, s.EndTime = :endTime
@@ -133,27 +199,26 @@ class Shift extends Method{
                       VALUES (:shift_Id, :relation_Id);
                       COMMIT;";
         }else{
-
+            // If type has not changed update current shift
             $query = "UPDATE {$this->tableName} s, {$relationshipTable} rt
                       SET s.StartTime = :startTime, s.EndTime = :endTime, rt.{$idName} = :relation_Id
                       WHERE s.Id = :shift_Id
                       AND rt.Shift_Id = :shift_Id;";
         }
         
+         // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
-        //sanitize
+        // Santize and bind properties
         $this->startTime = parent::sanitize($this->startTime);
         $this->endTime = parent::sanitize($this->endTime);
         $relationship_Id = parent::sanitize($relationship_Id);
-
-        // bind values
         $stmt->bindParam(":startTime", $this->startTime);
         $stmt->bindParam(":endTime", $this->endTime);
         $stmt->bindParam(":shift_Id", $this->id);
         $stmt->bindParam(":relation_Id", $relationship_Id);
     
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
@@ -161,20 +226,26 @@ class Shift extends Method{
         return false;
     }
 
+    /**
+     * Deletes shift record in database
+     * 
+     * @return boolean Delete status
+     */   
     function delete(){
 
+        // SQL query to delete given record, 
+        // deletion of relationships is handled by database
         $query = "DELETE FROM {$this->tableName}
                   WHERE id = :shift_Id";
 
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
         
-        // Sanitize
+        // Santize and bind property
         $this->id = parent::sanitize($this->id);
-        
-        // Bind
         $stmt->bindParam(":shift_Id", $this->id);
 
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
@@ -182,33 +253,66 @@ class Shift extends Method{
         return false;
     }
 
+    /**
+     * Fetches all shifts for given month for every employee
+     * 
+     * @return array $dataArr Fetched rows from database as associative array.
+     */ 
     function getAllEmployeeShifts(){
 
-        $query = $this->getSqlQuery("getAllHours");
+        // SQL query to get shifts by date, add extra column for total hours each shift
+        // Needs to fetch from both relationships so UNION table is needed
+        $query = "SELECT e.Name, e.Username, s.StartTime, s.EndTime, st.name as TaskName, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours' 
+                  FROM employee e, shift s 
+                  INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id 
+                  INNER JOIN subtask st ON ss.Subtask_Id = st.Id 
+                  WHERE e.Id = s.employee_Id
+                  AND YEAR(s.StartTime) = :y
+                  AND MONTH(s.StartTime) = :m
+                  
+                  UNION 
+                  
+                  SELECT e.Name, e.Username, s.StartTime, s.EndTime, a.Name, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours'
+                  FROM employee e, shift s 
+                  INNER JOIN shift_assignment sa ON s.Id = sa.Shift_Id 
+                  INNER JOIN assignment a ON sa.Assignment_Id = a.Id 
+                  WHERE e.Id = s.employee_Id
+                  AND YEAR(s.StartTime) = :y
+                  AND MONTH(s.StartTime) = :m
+                  ORDER BY Username";
 
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
         
+        // Sanitize properties
         $this->date = parent::sanitize($this->date);
-            
+        
+        // Format date to be bound to statement
         $dateArr = explode("-", $this->date);
         $year = $dateArr[0];
         $month = $dateArr[1];
 
+        // Bind properties to statement
         $stmt->bindParam(":y", $year);
         $stmt->bindParam(":m", $month);
 
-        // execute query
+        // Execute query
         $stmt->execute();
 
+        // Creates associative array with keys to contain values from fetched from database
         $shiftProp = array_fill_keys(array("name", "username", "startTime", "endTime", "taskName", "shiftHours"),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $shiftProp, false);
-
-        $dataArr = $this->groupShiftsByEmployee($dataArr);
 
         return $dataArr;
     }
 
-    public function addRelationshipTables($relationship){
+    /**
+     * Adds relationships to object to be used in SQL statement
+     * 
+     * @param string $relationship which relationship(s) to add to object
+     */ 
+    function addRelationshipTables($relationship){
 
         if($relationship == "subtask"){
             array_push($this->relationship, new Relationship("Subtask_Id", "shift_subtask", "subtask"));
@@ -224,27 +328,61 @@ class Shift extends Method{
         }
     }
 
-    private function groupShiftsByEmployee($shiftArr){
+    /**
+     * Calculates total hours for each employee for the given month
+     * 
+     * @param array $shiftArr Array of arrays each array represent an employee
+     * @return array $shiftArr Array of arrays with added key value pair of totalhours  
+     */ 
+    function calculateTotalHours($shiftArr){
+
+        // Outer loop to handle employee
+        for($i = 0; $i< count($shiftArr); $i++){
+
+            // Initial value
+            $totalHours = 0;
+
+            // Inner loop to handle each shift
+            for($j = 0; $j< count($shiftArr[$i]); $j++){
+
+                $totalHours += $shiftArr[$i][$j]['shiftHours'];
+            }
+
+            // When all shifts have been counted add key value pair of TotalHours
+            $shiftArr[$i]['TotalHours'] = $totalHours;
+        }
+
+        return $shiftArr;
+    }
+
+    /**
+     * Group fetched shifts by employee
+     * 
+     * @param array $shiftArr All employee shifts for specific month
+     * @return array $regroupArr Array of arrays, one array for each employee with shifts
+     */ 
+    function groupShiftsByEmployee($shiftArr){
         
         // Creates container array
         $regroupArr = array();
-        // Creates inner array
+        // Creates inner array to hold first employee
         $regroupArr[0] = array();
         $index = 0;
-        // Declare startvalues
+        // Declare first employee
         $currentUsername = $shiftArr[0]['username'];
         $previousUsername = $shiftArr[0]['username'];
 
+        // Loop through each shift
         foreach($shiftArr as $key => $value){
             
             // Username of the current iteration
             $currentUsername = $shiftArr[$key]['username'];
 
-            // Add values to the current array
+            // If values are the same add values to the current array
             if($currentUsername == $previousUsername){
                 array_push($regroupArr[$index], $shiftArr[$key]);
             }else{
-                // If the username has changed push a new array and push values into that one istead
+                // If the username has changed create a new array and push values into that one instead
                 array_push($regroupArr, array());
                 $index++;
                 array_push($regroupArr[$index], $shiftArr[$key]);
@@ -255,119 +393,5 @@ class Shift extends Method{
         }
 
         return $regroupArr;
-    }
-
-    function calculateTotalHours($shiftArr){
-
-        for($i = 0; $i< count($shiftArr); $i++){
-
-            $totalHours = 0;
-
-            for($j = 0; $j< count($shiftArr[$i]); $j++){
-
-                $totalHours += $shiftArr[$i][$j]['shiftHours'];
-            }
-
-            $shiftArr[$i]['TotalHours'] = $totalHours;
-        }
-
-        return $shiftArr;
-    }
-
-    private function getSqlQuery($query){
-
-        switch($query){
-            case "getSingle": 
-
-                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
-                            FROM employee e, {$this->tableName} s 
-                            INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_id
-                            INNER JOIN {$this->relationship[0]->tableName}  st ON ss.{$this->relationship[0]->idColumnName} = st.Id
-                            WHERE e.Id = :employee_Id
-                            AND s.employee_Id = :employee_Id
-                            AND s.Id = :shiftId
-                            
-                            UNION
-
-                            SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
-                            FROM employee e, {$this->tableName} s 
-                            INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
-                            INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
-                            WHERE e.Id = :employee_Id
-                            AND s.employee_Id = :employee_Id
-                            AND s.Id = :shiftId;";
-                
-                return $string;
-            case "getAll":
-                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName 
-                           FROM employee e, {$this->tableName} s 
-                           INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id 
-                           INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id 
-                           WHERE e.Id = :employee_Id 
-                           AND s.employee_Id = :employee_Id 
-                           
-                           UNION 
-                           
-                           SELECT e.Name, s.StartTime, s.EndTime, a.Name
-                           FROM employee e, {$this->tableName} s 
-                           INNER JOIN {$this->relationship[1]->relTableName} sa ON s.Id = sa.Shift_Id 
-                           INNER JOIN {$this->relationship[1]->tableName} a ON sa.{$this->relationship[1]->idColumnName} = a.Id 
-                           WHERE e.Id = :employee_Id 
-                           AND s.employee_Id = :employee_Id;";
-
-                return $string;
-                break;
-            case "getAllDate":
-
-                $string = "SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
-                           FROM employee e, {$this->tableName} s 
-                           INNER JOIN {$this->relationship[0]->relTableName} ss ON s.Id = ss.Shift_Id
-                           INNER JOIN {$this->relationship[0]->tableName} st ON ss.{$this->relationship[0]->idColumnName} = st.Id
-                           WHERE e.Id = :employee_Id
-                           AND s.employee_Id = :employee_Id
-                           AND YEAR(s.StartTime) = :y
-                           AND MONTH(s.StartTime) = :m
-                           
-                           UNION   
-   
-                           SELECT e.Name, s.StartTime, s.EndTime, st.name
-                           FROM employee e, {$this->tableName} s 
-                           INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
-                           INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
-                           WHERE e.Id = :employee_Id
-                           AND s.employee_Id = :employee_Id
-                           AND YEAR(s.StartTime) = :y 
-                           AND MONTH(s.StartTime) = :m";
-
-                return $string;
-                break;
-            case "getAllHours":
-
-                $string = "SELECT e.Name, e.Username, s.StartTime, s.EndTime, st.name as TaskName, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours' 
-                           FROM employee e, shift s 
-                           INNER JOIN shift_subtask ss ON s.Id = ss.Shift_Id 
-                           INNER JOIN subtask st ON ss.Subtask_Id = st.Id 
-                           WHERE e.Id = s.employee_Id
-                           AND YEAR(s.StartTime) = :y
-                           AND MONTH(s.StartTime) = :m
-                           
-                           UNION 
-                           
-                           SELECT e.Name, e.Username, s.StartTime, s.EndTime, a.Name, TRUNCATE(TIMESTAMPDIFF(SECOND, s.StartTime, s.EndTime) / 3600, 2) as 'ShiftHours'
-                           FROM employee e, shift s 
-                           INNER JOIN shift_assignment sa ON s.Id = sa.Shift_Id 
-                           INNER JOIN assignment a ON sa.Assignment_Id = a.Id 
-                           WHERE e.Id = s.employee_Id
-                           AND YEAR(s.StartTime) = :y
-                           AND MONTH(s.StartTime) = :m
-                           ORDER BY Username";
-
-                return $string;
-                break;
-            default: 
-                return;
-        }
-
-
     }
 }

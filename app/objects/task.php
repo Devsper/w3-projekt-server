@@ -18,102 +18,134 @@ class Task extends Method{
         $this->conn = $db;
     }
 
+    /**
+     * Fetches task from database, single and multiple record
+     * 
+     * @return array $dataArr Fetched rows from database as associative array.
+     */
     function read(){
         
+        // If id property is present fetch single record
         if($this->id){
 
-            $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE t.Assignment_Id = :assignment_Id AND t.id = :id";
+            // SQL Query to fetch a single task 
+            $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE t.id = :id";
 
-            // prepare query statement
+            // Prepare query statement
             $stmt = $this->conn->prepare($query);
-        
-            $this->task_id = parent::sanitize($this->assignment_Id);
+            
+            // Santize and bind property
             $this->id = parent::sanitize($this->id);
-            // bind values
-            $stmt->bindParam(":assignment_Id", $this->assignment_Id);
             $stmt->bindParam(":id", $this->id);
         }else{
+            // SQL query to fetch all tasks from specifik assignment
             $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE Assignment_Id = :assignment_Id";
 
-            // prepare query statement
+            // Prepare query statement
             $stmt = $this->conn->prepare($query);
 
+            // Sanitize property
             $this->task_id = parent::sanitize($this->assignment_Id);
-            // bind values
+            
+            // Bind property to statement
             $stmt->bindParam(":assignment_Id", $this->assignment_Id);
         }
 
-        // execute query
+        // Execute query
         $stmt->execute();
 
+         // Creates associative array with keys to contain values from fetched from database
         $taskProp = array_fill_keys(array("name", "id"),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $taskProp);
     
         return $dataArr;
     }
+
+    /**
+     * Creates a record of task in database
+     * 
+     * @return boolean Creation status
+     */
     function create(){
 
+        // SQL query to create an task
         $query = "INSERT INTO {$this->tableName} (Name, Assignment_Id) VALUES (:name, :assignment_Id)";
         
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
-    
+        
+        // Santize and bind properties
         $this->assignment_Id = parent::sanitize($this->assignment_Id);
         $this->name = parent::sanitize($this->name);
-
-        // bind values
         $stmt->bindParam(":assignment_Id", $this->assignment_Id);
         $stmt->bindParam(":name", $this->name);
-        // execute query
-        $stmt->execute();
-        
+                
          // execute query
         if($stmt->execute()){
             return true;
         }
         return false;
     }
+
+    /**
+     * Updates task record in database
+     * 
+     * @return boolean Update status
+     */
     function update(){
 
+        // SQL query to update a given record     
         $query = "UPDATE {$this->tableName} SET Name =:name WHERE id=:id";
         
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
-    
+        
+        // Santize and bind properties
         $this->id = parent::sanitize($this->id);
         $this->name = parent::sanitize($this->name);
-
-        // bind values
         $stmt->bindParam(":id", $this->id);
         $stmt->bindParam(":name", $this->name);
         
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
         return false;
     }
+
+    /**
+     * Deletes assignment record in database
+     * 
+     * @return boolean Delete status
+     */   
     function delete(){
 
+        // SQL query to delete given record
         $query = "DELETE FROM {$this->tableName} WHERE id=:id";
        
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
-    
+        
+        // Santize and bind property
         $this->id = parent::sanitize($this->id);
-
-        // bind values
         $stmt->bindParam(":id", $this->id);
     
-        // execute query
+        // Execute query
         if($stmt->execute()){
             return true;
         }
         return false;
     }
 
+    /**
+     * Fetches all tasks and subtasks for given employee
+     * 
+     * @return array $dataArr Fetched rows from database as associative array.
+     */ 
     function getEmployeeTasks(){
         
+        // SQL Query to select all tasks and subtasks 
         $query = "SELECT task.Name as 'Task', subtask.Name as 'Subtask', task.Id as 'TaskId', subtask.Id as 'SubtaskId' 
                   FROM employee
                   INNER JOIN employee_task ON employee.Id = employee_task.Employee_Id
@@ -121,18 +153,21 @@ class Task extends Method{
                   INNER JOIN subtask ON subtask.Task_Id = task.Id
                   WHERE employee.Id = :employee_Id";
         
-        // prepare query statement
+        // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
+        // Sanitizes property
         $this->employee_Id = parent::sanitize($this->employee_Id);
 
-        // bind values
+        // Bind property to statement
         $stmt->bindParam(":employee_Id", $this->employee_Id);
     
-        // execute query
+        // Execute query
         $stmt->execute();
         
+        // Creates associative array with keys to contain values from fetched from database
         $shiftProp = array_fill_keys(array("task", "taskId", "subtask", "subtaskId" ),"");
+        // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $shiftProp);
 
         return $dataArr;
