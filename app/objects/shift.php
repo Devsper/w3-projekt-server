@@ -120,7 +120,7 @@ class Shift extends Method{
     }
 
     /**
-     * Creates a record of assignment in database
+     * Creates a record of shift in database
      * 
      * @return boolean Creation status
      */

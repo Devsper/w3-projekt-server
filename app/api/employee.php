@@ -48,7 +48,7 @@ switch($method){
             // Fetch employee from database
             $result = $employee->read();
             // Determine startpage for employee
-            $startpage = $employee->checkStartPage();
+            $startpage = $employee->determineStartPage();
             $result['startpage'] = $startpage;
 						
 			// Return result as JSON

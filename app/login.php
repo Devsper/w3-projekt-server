@@ -34,7 +34,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
         if($employee->login()){
             
             // Determine startpage for employee
-            $startpage = $employee->checkStartPage();
+            $startpage = $employee->determineStartPage();
 						
 			// Create authenication token 
             $auth = new Authentication();

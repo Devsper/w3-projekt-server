@@ -9,6 +9,7 @@ class Task extends Method{
 
     // Properties of class
     public $id;
+    public $ids = array();
     public $name;
     public $assignment_Id;
     public $employee_Id;
@@ -60,6 +61,48 @@ class Task extends Method{
         $dataArr = parent::fetchRows($stmt, $taskProp);
     
         return $dataArr;
+    }
+
+    /**
+     * Updates relationship between Employee and Assignments
+     * 
+     * @return boolean Update status
+     */ 
+    function updateEmployeeTasks(){
+
+        $sqlValues = [];
+
+        // Dynamically add values to add into VALUES clause
+        for($i = 0; $i< count($this->ids); $i++){
+            array_push($sqlValues, "(:employeeId, :taskId".$i.")");
+        }
+
+        $query = "START TRANSACTION;
+                  DELETE FROM employee_task WHERE Employee_Id = :employeeId;
+                  INSERT INTO employee_task (Employee_Id, Task_Id)
+                  VALUES"; 
+        // Output all values that should be added
+        $query .= implode(',', $sqlValues).";";
+        $query .= "COMMIT;";
+
+        // Prepare query statement
+        $stmt = $this->conn->prepare($query);
+        
+        // Sanitize and bind all assignment values
+        for($i = 0; $i< count($this->ids); $i++){
+            $this->ids[$i] =  parent::sanitize($this->ids[$i]);
+            $stmt->bindParam(":taskId".$i, $this->ids[$i]);
+        }
+
+        // Santize and bind property
+        $this->employee_Id =  parent::sanitize($this->employee_Id);
+        $stmt->bindParam(":employeeId", $this->employee_Id);
+
+        // Execute query
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
 
     /**
