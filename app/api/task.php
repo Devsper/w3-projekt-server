@@ -1,8 +1,10 @@
 <?php
 
 // required headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE");
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once('../config/database.php');
@@ -37,14 +39,11 @@ $task = new Task($db);
 switch($method){
     case 'GET':
 				
-		// check if id is present to fetch a single row
+		// Check if id is present to fetch a single row
         if(!empty($_GET['id'])){
             $task->id = $_GET['id'];
         }
-			
-	    // Assign value to object property
-        $task->assignment_Id = $_GET['assignment_Id'];
-			
+        
 		// Fetch from database
         $result = $task->read();
 				

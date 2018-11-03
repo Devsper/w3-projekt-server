@@ -19,10 +19,10 @@ $auth = new Authentication();
 
 // Authenticate sent token both from GET and other HTTP methods
 $data = json_decode(file_get_contents("php://input"));
-// $token = $auth->authenticate($data->token);
+$token = $auth->authenticate($data->token);
 
-// // Cancel request if authentication failed
-// if(!$token){ return ;} 
+// Cancel request if authentication failed
+if(!$token){ return ;} 
 
 // Create database connection
 $database = new Database();

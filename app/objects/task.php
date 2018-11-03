@@ -31,7 +31,7 @@ class Task extends Method{
 
             // SQL Query to fetch a single task 
             $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE t.id = :id";
-
+            
             // Prepare query statement
             $stmt = $this->conn->prepare($query);
             
@@ -39,17 +39,13 @@ class Task extends Method{
             $this->id = parent::sanitize($this->id);
             $stmt->bindParam(":id", $this->id);
         }else{
-            // SQL query to fetch all tasks from specifik assignment
-            $query = "SELECT t.Id, t.Name FROM {$this->tableName} t WHERE Assignment_Id = :assignment_Id";
-
+            // SQL query to fetch all tasks
+            $query = "SELECT t.Id, t.Name, a.Name 
+                      FROM {$this->tableName} t, assignment a
+                      WHERE a.Id = t.Assignment_Id;";
+            
             // Prepare query statement
             $stmt = $this->conn->prepare($query);
-
-            // Sanitize property
-            $this->task_id = parent::sanitize($this->assignment_Id);
-            
-            // Bind property to statement
-            $stmt->bindParam(":assignment_Id", $this->assignment_Id);
         }
 
         // Execute query
@@ -186,15 +182,15 @@ class Task extends Method{
      * 
      * @return array $dataArr Fetched rows from database as associative array.
      */ 
-    function getEmployeeTasks(){
+    function getEmployeeTasksSubtasks(){
         
-        // SQL Query to select all tasks and subtasks 
-        $query = "SELECT task.Name as 'Task', subtask.Name as 'Subtask', task.Id as 'TaskId', subtask.Id as 'SubtaskId' 
-                  FROM employee
-                  INNER JOIN employee_task ON employee.Id = employee_task.Employee_Id
-                  INNER JOIN task ON task.Id = employee_task.Task_Id
-                  INNER JOIN subtask ON subtask.Task_Id = task.Id
-                  WHERE employee.Id = :employee_Id";
+        //SQL Query to select all task and subtasks for specific employee       
+        $query = "SELECT task.Name as 'TaskName', task.Id as 'TaskId', subtask.Name as 'SubtaskName', subtask.Id as 'SubtaskId'
+                  FROM employee 
+                  LEFT JOIN employee_task ON employee.Id = employee_task.Employee_Id 
+                  LEFT JOIN task ON task.Id = employee_task.Task_Id 
+                  LEFT JOIN subtask ON subtask.Task_Id = task.Id 
+                  WHERE employee.Id = :employeeId";
         
         // Prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -203,13 +199,43 @@ class Task extends Method{
         $this->employee_Id = parent::sanitize($this->employee_Id);
 
         // Bind property to statement
-        $stmt->bindParam(":employee_Id", $this->employee_Id);
+        $stmt->bindParam(":employeeId", $this->employee_Id);
     
         // Execute query
         $stmt->execute();
         
         // Creates associative array with keys to contain values from fetched from database
-        $shiftProp = array_fill_keys(array("task", "taskId", "subtask", "subtaskId" ),"");
+        $shiftProp = array_fill_keys(array("taskName", "taskId", "subtaskName", "subtaskId", ),"");
+        // Populate array with values from database
+        $dataArr = parent::fetchRows($stmt, $shiftProp);
+
+        return $dataArr;
+    }
+
+    function getEmployeeActiveTasks(){
+        
+        //SQL Query to select all task and subtasks for specific employee       
+        $query = "SELECT a.Name as 'AssignmentName', a.Id as 'AssignmentId', t.Name as 'TaskName', t.Id as 'TaskId'
+                  FROM task t
+                  INNER JOIN employee_task et ON t.Id = et.Task_Id
+                  INNER JOIN employee e ON e.Id = et.Employee_Id
+                  INNER JOIN assignment a ON a.Id = t.Assignment_Id
+                  WHERE e.Id = :employeeId";
+        
+        // Prepare query statement
+        $stmt = $this->conn->prepare($query);
+
+        // Sanitizes property
+        $this->employee_Id = parent::sanitize($this->employee_Id);
+
+        // Bind property to statement
+        $stmt->bindParam(":employeeId", $this->employee_Id);
+    
+        // Execute query
+        $stmt->execute();
+        
+        // Creates associative array with keys to contain values from fetched from database
+        $shiftProp = array_fill_keys(array("assignmentName", "assignmentId", "taskName", "taskId", ),"");
         // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $shiftProp);
 

@@ -24,6 +24,7 @@ class Method{
             
             // Add values from database to associative array
             foreach($objProp as $key => $value){
+
                 // Add value of column to associative array
                 // $row keys has same name as objProp keys just starting capital letter
                 $objProp[$key] = $row[ucwords($key)];

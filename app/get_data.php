@@ -29,25 +29,28 @@ if(!$token){ return ;}
 //Determine HTTP Method
 if($method == "POST"){
 
-	// Read JSON data from client
-    $data = json_decode(file_get_contents("php://input"));
-    
-    // Authenticate JSON Web token
-    $auth = new Authentication();
-    $token = $auth->authenticate($data->token);
-
-	// Cancel request if token is invalid
-    if(!$token){ return ;} 
-
 	// Create database connection
     $database = new Database();
     $db = $database->getConnection();
-    
-    
+
     $dataToGet = $data->getData;
 	
 	// Determine if assignments or tasks should be fetched from database
     switch ($dataToGet) {
+        case 'employeeAssignmentTasks':
+            
+            // instantiate object and add data
+            $assignment = new Assignment($db);
+            $assignment->employee_Id = $data->employee_Id;
+
+			// Fetch assignments from database
+            $result = $assignment->getEmployeeAssignmentTasks();
+            // Formats result for easier consumption
+            $result = $assignment->formatAssignmentTasks($result);
+            
+			// Return data as JSON
+            echo json_encode($result);
+            break;
         case 'employeeAssignments':
             
             // instantiate object and add data
@@ -60,18 +63,29 @@ if($method == "POST"){
 			// Return data as JSON
             echo json_encode($result);
             break;
-        case 'employeeTasks':
+        case 'employeeTasksSubtasks':
 				
 			// instantiate object and add data 
             $task = new Task($db);
             $task->employee_Id = $data->employee_Id;
             
             // Fetch tasks from database 
-            $result = $task->getEmployeeTasks();
+            $result = $task->getEmployeeTasksSubtasks();
 				
 		    // return data as JSON
             echo json_encode($result);
             break;
+        case 'employeeActiveTasks':
+
+            // instantiate object and add data 
+            $task = new Task($db);
+            $task->employee_Id = $data->employee_Id;
+            
+            // Fetch tasks from database 
+            $result = $task->getEmployeeActiveTasks();
+				
+		    // return data as JSON
+            echo json_encode($result);
         default:
             break;
     }

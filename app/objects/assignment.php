@@ -27,13 +27,14 @@ class Assignment extends Method{
 				
         // SQL query to select all assignments for given employee. 
         // Adds extra column if assignment has tasks 
-        $query = "SELECT DISTINCT a.Name, a.Id, 
+        $query = "SELECT a.Name, a.Id, 
                   (CASE WHEN a.Id = t.Assignment_Id THEN 'True' ELSE 'False' END) as 'HasTasks'
                   FROM assignment a
                   INNER JOIN task t
                   INNER JOIN employee_assignment ON a.id = employee_assignment.Assignment_Id 
                   INNER JOIN employee ON employee.Id = employee_assignment.Employee_Id 
-                  WHERE employee.Id = :employeeId";
+                  WHERE employee.Id = :employeeId
+                  GROUP BY a.Name";
 
         // Prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -50,7 +51,44 @@ class Assignment extends Method{
         
         // Populate array with values from database
         $dataArr = parent::fetchRows($stmt, $employeeProp);
+        
+        // Return associative array
+        return $dataArr;
+    }
+
+    /**
+     * Fetches all assignment and its tasks for given employee
+     * 
+     * @return array $dataArr Fetched rows from database as associative array.
+     */ 
+    function getEmployeeAssignmentTasks(){
+        
+        // SQL query to select all assignments and its tasks for given employee. 
+        $query = "SELECT a.Name as 'AssignmentName', a.Id as 'AssignmentId', t.Name as 'TaskName', t.Id as 'TaskId'
+                  FROM assignment a 
+                  LEFT JOIN employee_assignment ea ON a.Id = ea.Assignment_Id 
+                  LEFT JOIN employee e ON e.Id = ea.Employee_Id 
+                  LEFT JOIN task t ON t.Assignment_Id = a.Id 
+                  WHERE e.Id = :employeeId
+                  GROUP BY a.Name, a.Id, t.Name, t.Id
+                  ORDER BY a.Name";
+
+        // Prepare query statement
+        $stmt = $this->conn->prepare($query);
 				
+        // Santize and bind property
+        $this->employee_Id =  parent::sanitize($this->employee_Id);
+        $stmt->bindParam(":employeeId", $this->employee_Id);
+    
+        // Execute query
+        $stmt->execute();
+			 
+        // Creates associative array with keys to contain values from fetched from database
+        $employeeProp = array_fill_keys(array("assignmentName", "assignmentId", "taskName", "taskId"),"");
+        
+        // Populate array with values from database
+        $dataArr = parent::fetchRows($stmt, $employeeProp, false); 
+
         // Return associative array
         return $dataArr;
     }
@@ -209,5 +247,55 @@ class Assignment extends Method{
             return true;
         }
         return false;
+    }
+
+    function formatAssignmentTasks($arr){
+        
+        $regroupArr = array();
+
+        // Fetches unique assignment names and their ids
+        $uniqueNames = array_unique(array_column($arr, 'assignmentName'));
+        $uniqueIds = array_unique(array_column($arr, 'assignmentId'));
+
+        $i = 0;
+
+        // Adds AssignmentNames to own array
+        foreach($uniqueNames as $value){
+            $regroupArr[$i]["name"] = $value;
+            $i++;
+        }
+
+        $i = 0;
+
+        // Adds assignment id and array of tasks to same array as above
+        foreach($uniqueIds as $value){
+            $regroupArr[$i]["id"] = $value;
+            $regroupArr[$i]["tasks"] = array();
+            $i++;
+        }
+
+        // Adds tasks to corresponding assignment
+        foreach($arr as $row){
+            
+            if(is_null($row["taskName"])){
+                continue;
+            }
+
+            // Creates task from current row
+            $task = array();
+            $task["name"] = $row["taskName"];
+            $task["id"] = $row["taskId"];
+
+            // Adds task to corrent assignment
+            $key = array_search($row["assignmentName"], array_column($regroupArr, 'name'));
+            array_push($regroupArr[$key]["tasks"], $task);
+        }
+
+        // Sorts array after amount of tasks
+        array_multisort(array_map(function($element) {
+            return count($element["tasks"]);
+        }, $regroupArr), SORT_DESC, $regroupArr);
+
+        return $regroupArr;
     }
 }
