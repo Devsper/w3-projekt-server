@@ -65,14 +65,15 @@ if($method == "POST"){
             break;
         case 'employeeTasksSubtasks':
 				
-			// instantiate object and add data 
+			// Instantiate object and add data 
             $task = new Task($db);
             $task->employee_Id = $data->employee_Id;
+            $task->assignment_Id = $data->assignment_Id;
             
             // Fetch tasks from database 
             $result = $task->getEmployeeTasksSubtasks();
 				
-		    // return data as JSON
+		    // Return data as JSON
             echo json_encode($result);
             break;
         case 'employeeActiveTasks':

@@ -93,41 +93,4 @@ class Employee extends Method{
 
         return false;
     }
-
-    /**
-     * Determine which startpage to show to employee
-     * 
-     * @return string which startpage to show employee
-     */
-    function determineStartPage(){
-
-        // SQL query to count how many assignments an employee has
-        $query = "SELECT COUNT(ea.Employee_Id) as 'Rows'
-                  FROM employee_assignment ea
-                  WHERE ea.Employee_Id = :employee_id;";
-
-        // Prepare query statement
-        $stmt = $this->conn->prepare($query);
-
-        // Santize and bind property
-        $this->id = parent::sanitize($this->id);
-        $stmt->bindParam(":employee_id", $this->id);
-        
-        // Execute query
-        $stmt->execute();
-
-         // Creates associative array with keys to contain values from fetched from database
-        $employeeProp = array_fill_keys(array("rows"),"");
-        // Populate array with values from database
-        $dataArr = parent::fetchRows($stmt, $employeeProp, false);
-
-        // If there are more than one row assignment should show otherwise tasks
-        if($dataArr[0]["rows"] > 1){
-            
-            return 'assignments';
-        }else{
-            return 'tasks';
-        }
-
-    }
 }

@@ -190,16 +190,19 @@ class Task extends Method{
                   LEFT JOIN employee_task ON employee.Id = employee_task.Employee_Id 
                   LEFT JOIN task ON task.Id = employee_task.Task_Id 
                   LEFT JOIN subtask ON subtask.Task_Id = task.Id 
-                  WHERE employee.Id = :employeeId";
+                  WHERE employee.Id = :employeeId
+                  AND task.Assignment_Id = :assignmentId";
         
         // Prepare query statement
         $stmt = $this->conn->prepare($query);
 
         // Sanitizes property
         $this->employee_Id = parent::sanitize($this->employee_Id);
+        $this->assignment_Id = parent::sanitize($this->assignment_Id);
 
         // Bind property to statement
         $stmt->bindParam(":employeeId", $this->employee_Id);
+        $stmt->bindParam(":assignmentId", $this->assignment_Id);
     
         // Execute query
         $stmt->execute();

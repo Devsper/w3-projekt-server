@@ -28,12 +28,12 @@ class Assignment extends Method{
         // SQL query to select all assignments for given employee. 
         // Adds extra column if assignment has tasks 
         $query = "SELECT a.Name, a.Id, 
-                  (CASE WHEN a.Id = t.Assignment_Id THEN 'True' ELSE 'False' END) as 'HasTasks'
-                  FROM assignment a
-                  INNER JOIN task t
-                  INNER JOIN employee_assignment ON a.id = employee_assignment.Assignment_Id 
-                  INNER JOIN employee ON employee.Id = employee_assignment.Employee_Id 
-                  WHERE employee.Id = :employeeId
+                  (CASE WHEN a.Id = t.Assignment_Id THEN 'True' ELSE 'False' END) as 'HasTasks' 
+                  FROM assignment a 
+                  LEFT JOIN task t ON a.Id = t.Assignment_Id 
+                  LEFT JOIN employee_assignment ON a.id = employee_assignment.Assignment_Id 
+                  LEFT JOIN employee ON employee.Id = employee_assignment.Employee_Id 
+                  WHERE employee.Id = :employeeId 
                   GROUP BY a.Name";
 
         // Prepare query statement

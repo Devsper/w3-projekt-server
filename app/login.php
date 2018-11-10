@@ -32,10 +32,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 				
 		// If login is successful
         if($employee->login()){
-            
-            // Determine startpage for employee
-            $startpage = $employee->determineStartPage();
-						
+    						
 			// Create authenication token 
             $auth = new Authentication();
             $authToken = $auth->createToken($employee->password);
@@ -43,7 +40,6 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 			// Associative array with data to return to client	
             $res = array(
                 "message" => true,
-                "startpage" => $startpage,
                 "employee" => array(
                     "id" => $employee->id,
                     "username" => $employee->username,
