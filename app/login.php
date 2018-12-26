@@ -44,7 +44,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
                     "id" => $employee->id,
                     "username" => $employee->username,
                     "name" => $employee->name,
-                    "admin" => $employee->isAdmin
+                    "isAdmin" => $employee->isAdmin
                 ),
                 "token" => $authToken
             );

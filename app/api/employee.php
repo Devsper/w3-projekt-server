@@ -47,21 +47,66 @@ switch($method){
             
             // Fetch employee from database
             $result = $employee->read();
-            // Determine startpage for employee
-            $startpage = $employee->determineStartPage();
-            $result['startpage'] = $startpage;
 						
 			// Return result as JSON
             echo json_encode($result);
+            return;
         }
+
+        $result = $employee->read();
+        echo json_encode($result);
 
         break;
     // HTTP methods to be used in the future
     case 'POST':
+        
+        $employee->name = $data->name;
+        $employee->username = $data->username;
+        $employee->password = $data->password;
+        $employee->employeeNr = $data->employeeNr;
+
+        // Try to create shift in database and return message
+        if($employee->create()){
+            $res = array("status" => "success", "message" => "Employee was created.");
+            echo json_encode($res);
+        }else{
+            $res = array("status" => "failure", "message" => "Unable to create employee.");
+            echo json_encode($res);
+        }    
+
         break;
     case 'PUT':
+
+        // Assign values to object properties to update
+        $employee->name = $data->name;
+        $employee->id = $data->id;
+        $employee->username = $data->username;
+        $employee->password = $data->password;
+        $employee->employeeNr = $data->employeeNr;
+
+        // Try to update employee in database and return message
+        if($employee->update()){
+            $res = array("status" => "success", "message" => "Employee was updated.");
+            echo json_encode($res);
+        }else{
+            $res = array("status" => "failure", "message" => "Unable to update employee.");
+            echo json_encode($res);
+        }    
+
         break;
     case 'DELETE':
+
+        $employee->id = $data->id;
+
+        // Try to delete employee in database and return message
+        if($employee->delete()){
+            $res = array("status" => "success", "message" => "Employee was deleted.");
+            echo json_encode($res);
+        }else{
+            $res = array("status" => "failure", "message" => "Unable to delete employee.");
+            echo json_encode($res);
+        }    
+        
         break;
     default:
         echo 'Default';
