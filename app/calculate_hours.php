@@ -13,16 +13,16 @@ require_once('objects/authentication.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Instantiate authenication object
-$auth = new Authentication();
+// // Instantiate authenication object
+// $auth = new Authentication();
 
-// Authenticate sent token both from GET and other HTTP methods
-if($method == 'GET'){
-    $token = $auth->authenticate($_GET['token']);
-}
+// // Authenticate sent token both from GET and other HTTP methods
+// if($method == 'GET'){
+//     $token = $auth->authenticate($_GET['token']);
+// }
 
-// Cancel request if authentication failed
-if(!$token){ return ;} 
+// // Cancel request if authentication failed
+// if(!$token){ return ;} 
 
 // Determines HTTP Method
 if($method == "GET"){
@@ -40,13 +40,13 @@ if($method == "GET"){
             $shift->date = $_GET['date'];
 				
 			// Fetch shifts for all employees from database
-            $result = $shift->getAllEmployeeShifts();
+            $shifts = $shift->getAllEmployeeShifts();
 
             // Sorts every shift to its employee
-            $result = $shift->groupShiftsByEmployee($result);
+            $employeeShifts = $shift->groupShiftsByEmployee($shifts);
 
             // Calculate total job hours for each employee 
-            $result = $shift->calculateTotalHours($result);
+            $result = $shift->calculateTotalHours($employeeShifts);
 
             echo json_encode($result);
         }else{

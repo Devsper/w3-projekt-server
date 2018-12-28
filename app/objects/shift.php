@@ -336,20 +336,16 @@ class Shift extends Method{
      */ 
     function calculateTotalHours($shiftArr){
 
-        // Outer loop to handle employee
-        for($i = 0; $i< count($shiftArr); $i++){
+        // Callback function to summarize shift hours
+        function sum($carry, $item){ 
+            return $carry += $item['shiftHours'];
+        }
 
-            // Initial value
-            $totalHours = 0;
+        // Calculates hours for each employee
+        foreach($shiftArr as $key => $value){
 
-            // Inner loop to handle each shift
-            for($j = 0; $j< count($shiftArr[$i]); $j++){
-
-                $totalHours += $shiftArr[$i][$j]['shiftHours'];
-            }
-
-            // When all shifts have been counted add key value pair of TotalHours
-            $shiftArr[$i]['TotalHours'] = $totalHours;
+            $arr = $shiftArr[$key]['shifts'];
+            $shiftArr[$key]['totalHours'] = array_reduce($arr, 'sum');
         }
 
         return $shiftArr;
@@ -361,37 +357,53 @@ class Shift extends Method{
      * @param array $shiftArr All employee shifts for specific month
      * @return array $regroupArr Array of arrays, one array for each employee with shifts
      */ 
-    function groupShiftsByEmployee($shiftArr){
-        
-        // Creates container array
-        $regroupArr = array();
-        // Creates inner array to hold first employee
-        $regroupArr[0] = array();
-        $index = 0;
+    function groupShiftsByEmployee($shifts){
+
         // Declare first employee
-        $currentUsername = $shiftArr[0]['username'];
-        $previousUsername = $shiftArr[0]['username'];
+        $currentUsername = $shifts[0]['username'];
+        $previousUsername = $shifts[0]['username'];
+        $index = 0;
+
+        // Container array that will hold all employees and shifts
+        $regroupArr = array(
+                array(
+                'name' => $shifts[0]['name'],
+                'username' => $shifts[0]['username'],
+                'shifts' => array()
+            ));
+        // Temporary array to hold shifts
+        $tempArr = array();
 
         // Loop through each shift
-        foreach($shiftArr as $key => $value){
+        foreach($shifts as $key => $value){
             
-            // Username of the current iteration
-            $currentUsername = $shiftArr[$key]['username'];
+             // Username of the current iteration
+            $currentUsername = $shifts[$key]['username'];
 
-            // If values are the same add values to the current array
-            if($currentUsername == $previousUsername){
-                array_push($regroupArr[$index], $shiftArr[$key]);
-            }else{
-                // If the username has changed create a new array and push values into that one instead
-                array_push($regroupArr, array());
+            // If the employee username has changed 
+            if($currentUsername != $previousUsername){
+
                 $index++;
-                array_push($regroupArr[$index], $shiftArr[$key]);
-            }
-            
-            // Updates username for previous run
-            $previousUsername = $shiftArr[$key]['username'];
-        }
 
+                // Create new array for nextt employee
+                array_push($regroupArr, array());
+                $regroupArr[$index]['name'] = $shifts[$key]['name'];
+                $regroupArr[$index]['username'] = $shifts[$key]['username'];
+                $regroupArr[$index]['shifts'] = array();
+                $tempArr = array();
+                
+            }
+
+            // Removes keys from shift array
+            unset($shifts[$key]['name']);
+            unset($shifts[$key]['username']);
+            // Add shifts to employee
+            array_push($tempArr, $shifts[$key]);
+            $regroupArr[$index]['shifts'] = $tempArr;
+            $previousUsername = $currentUsername;
+        }
+        
         return $regroupArr;
+
     }
 }
