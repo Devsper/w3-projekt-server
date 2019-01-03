@@ -45,14 +45,15 @@ class Shift extends Method{
                       AND s.employee_Id = :employee_Id
                       AND s.Id = :shiftId
                       
-                      UNIO  
+                      UNION
+
                       SELECT e.Name, s.StartTime, s.EndTime, st.name as TaskName
                       FROM employee e, {$this->tableName} s 
                       INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
                       INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
                       WHERE e.Id = :employee_Id
                       AND s.employee_Id = :employee_Id
-                      AND s.Id = :shiftId;";
+                      AND s.Id = :shiftId";
 
         }elseif($this->date){
 
@@ -69,14 +70,15 @@ class Shift extends Method{
                       
                       UNION   
               
-                      SELECT e.Name, s.Id, s.StartTime, s.EndTime, st.name
+                      SELECT e.Name, s.Id, s.StartTime, s.EndTime, a.name
                       FROM employee e, {$this->tableName} s 
-                      INNER JOIN {$this->relationship[1]->relTableName} ss ON s.Id = ss.Shift_Id
-                      INNER JOIN {$this->relationship[1]->tableName} st ON ss.{$this->relationship[1]->idColumnName} = st.Id
+                      INNER JOIN {$this->relationship[1]->relTableName} sa ON s.Id = sa.Shift_Id
+                      INNER JOIN {$this->relationship[1]->tableName} a ON sa.{$this->relationship[1]->idColumnName} = a.Id
                       WHERE e.Id = :employee_Id
                       AND s.employee_Id = :employee_Id
                       AND YEAR(s.StartTime) = :y 
-                      AND MONTH(s.StartTime) = :m";
+                      AND MONTH(s.StartTime) = :m
+                      ORDER BY StartTime DESC";
         }
 
         // Prepare query statement
@@ -279,7 +281,7 @@ class Shift extends Method{
                   WHERE e.Id = s.employee_Id
                   AND YEAR(s.StartTime) = :y
                   AND MONTH(s.StartTime) = :m
-                  ORDER BY Username";
+                  ORDER BY Username, StartTime DESC";
 
         // Prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -347,7 +349,7 @@ class Shift extends Method{
             $arr = $shiftArr[$key]['shifts'];
             $shiftArr[$key]['totalHours'] = array_reduce($arr, 'sum');
         }
-
+        
         return $shiftArr;
     }
 
@@ -391,7 +393,6 @@ class Shift extends Method{
                 $regroupArr[$index]['username'] = $shifts[$key]['username'];
                 $regroupArr[$index]['shifts'] = array();
                 $tempArr = array();
-                
             }
 
             // Removes keys from shift array
@@ -402,7 +403,7 @@ class Shift extends Method{
             $regroupArr[$index]['shifts'] = $tempArr;
             $previousUsername = $currentUsername;
         }
-        
+
         return $regroupArr;
 
     }

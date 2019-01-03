@@ -1,5 +1,6 @@
 <?php 
 
+// Required headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Max-Age: 3600");
@@ -13,16 +14,16 @@ require_once('objects/authentication.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// // Instantiate authenication object
-// $auth = new Authentication();
+// Instantiate authenication object
+$auth = new Authentication();
 
-// // Authenticate sent token both from GET and other HTTP methods
-// if($method == 'GET'){
-//     $token = $auth->authenticate($_GET['token']);
-// }
+// Authenticate sent token both from GET and other HTTP methods
+if($method == 'GET'){
+    $token = $auth->authenticate($_GET['token']);
+}
 
-// // Cancel request if authentication failed
-// if(!$token){ return ;} 
+// Cancel request if authentication failed
+if(!$token){ return ;} 
 
 // Determines HTTP Method
 if($method == "GET"){

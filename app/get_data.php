@@ -1,5 +1,6 @@
 <?php 
 
+// Required headers
 header("Access-Control-Allow-Origin: http://127.0.0.1:4200");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Max-Age: 3600");
