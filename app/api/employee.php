@@ -14,19 +14,21 @@ require_once('../objects/authentication.php');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+/** Removed authentication to easie use Employees as a CRUD web service */
+
 // Instantiate authentication object
-$auth = new Authentication();
+//$auth = new Authentication();
 
 // Authenticate token from both GET and other HTTP methods
 if($method == 'GET'){
-    $token = $auth->authenticate($_GET['token']);
+    //$token = $auth->authenticate($_GET['token']);
 }else{
     $data = json_decode(file_get_contents("php://input"));
-    $token = $auth->authenticate($data->token);
+    //$token = $auth->authenticate($data->token);
 }
 
 // Cancel request if authentication failed
-if(!$token){ return ;} 
+//if(!$token){ return ;} 
 
 // Create database connection
 $database = new Database();
@@ -97,7 +99,7 @@ switch($method){
     case 'DELETE':
 
         $employee->id = $data->id;
-
+        
         // Try to delete employee in database and return message
         if($employee->delete()){
             $res = array("status" => "success", "message" => "Employee was deleted.");

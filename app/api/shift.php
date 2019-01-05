@@ -36,7 +36,6 @@ $db = $database->getConnection();
 // Instantiate shift object
 $shift = new Shift($db);
 
-
 // Determine HTTP method 
 switch($method){
     case 'GET':
@@ -71,13 +70,13 @@ switch($method){
 
         break;
     case 'POST':
-			  
+
 		// Assign values to object properties for creation
         $shift->startTime = $data->startTime;
         $shift->endTime = $data->endTime;
         $shift->employee_Id = $data->employee_Id;
         $shift->shiftType = $data->shiftType;
-        
+
         // Add specific relationship to object to know if its an assignment or task to be added
         $shift->addRelationshipTables($shift->shiftType);
 
