@@ -89,6 +89,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to add shift.");
             echo json_encode($res);
         }
@@ -113,6 +114,7 @@ switch($method){
             $res = array("status" => "success", "message" => "Shift was updated.");
             echo json_encode($res);
         }else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to update shift.");
             echo json_encode($res);
         }
@@ -128,6 +130,7 @@ switch($method){
             $res = array("status" => "success", "message" => "Shift was deleted.");
             echo json_encode($res);
         }else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to delete shift.");
             echo json_encode($res);
         }

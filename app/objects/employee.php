@@ -43,16 +43,22 @@ class Employee extends Method{
         $this->username = parent::sanitize($this->id);
         $stmt->bindParam(":id", $this->id);
         
+        $returnArr = [];
         // Execute query
-        $stmt->execute();
+        if($stmt->execute()){
+            $returnArr["success"] = true;
+        }else{
+            $returnArr["success"] = false;
+            return;
+        }
         
-         // Creates associative array with keys to contain values from fetched from database
+        // Creates associative array with keys to contain values from fetched from database
         $employeeProp = array_fill_keys(array("id", "username", "name", "isAdmin", "password", "employeeNr"),"");
         // Populate array with values from database
-        $dataArr = parent::fetchRows($stmt, $employeeProp, false);
+        $returnArr["data"] = parent::fetchRows($stmt, $employeeProp, false);
 				
         // Return associative array
-        return $dataArr;
+        return $returnArr;
     }
 
     /**

@@ -62,6 +62,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to add task.");
             echo json_encode($res);
         }
@@ -78,6 +79,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to update task.");
             echo json_encode($res);
         }
@@ -93,6 +95,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to delete task.");
             echo json_encode($res);
         }

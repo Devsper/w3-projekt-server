@@ -64,6 +64,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
          	// Send back failed message	 
             $res = array("status" => "failure", "message" => "Assignment not was added.");
             echo json_encode($res);
@@ -82,7 +83,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
-
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to update assignment.");
             echo json_encode($res);
         }
@@ -99,6 +100,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to delete assignment.");
             echo json_encode($res);
         }

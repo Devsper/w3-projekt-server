@@ -70,6 +70,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to add subtask.");
             echo json_encode($res);
         }
@@ -89,6 +90,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to update subtask.");
             echo json_encode($res);
         }
@@ -107,6 +109,7 @@ switch($method){
             echo json_encode($res);
         }
         else{
+            http_response_code(500);
             $res = array("status" => "failure", "message" => "Unable to delete subtask.");
             echo json_encode($res);
         }
